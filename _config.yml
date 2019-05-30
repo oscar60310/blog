@@ -13,7 +13,9 @@ markdown: kramdown
 plugins:
   - jekyll-feed
   - jekyll-paginate
-
+lsi: false
+quiet: false
+permalink: /:year/:month/:day/:title/
 # ---------------- #
 #      Author      #
 # ---------------- #
@@ -37,3 +39,9 @@ navs:
 comments_provider: disqus
 disqus:
     username: oscar60310
+# ---------------- #
+#      Search      #
+# ---------------- #
+simple_jekyll_search:
+  fulltext: false
+  limit: 10
