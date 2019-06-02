@@ -3,7 +3,7 @@ layout: page
 title: About
 description: 關於我
 keywords: Ivan Tsai
-comments: true
+comments: false
 menu: 關於
 permalink: /about/
 ---
