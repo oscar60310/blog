@@ -6,7 +6,7 @@ subtitle: Thoughts, stories and ideas.
 description: >- # this means to ignore newlines until "baseurl:"
   Goofy's Blog, share thoughts, stories and ideas.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://blog.cptsai.com" # the base hostname & protocol for your site, e.g. http://example.com
 paginate: 10
 markdown: kramdown
 plugins:
