@@ -23,17 +23,13 @@ categories: javascript IoT
 
 **沒有**，花了兩小時後，我把整組電路連著體重計一起放到櫃子裡收藏了。剛好遇到雙十一電商們推出的特惠活動，一台有藍芽功能的智慧體重計就這樣神奇的出現在我的桌上 XD
 
-<div class='info' style='box-shadow: -5px 0px #009688;padding-left: 10px;'>
-舊的不去，新的不來
-</div>
+{% include message/info.html content="舊的不去，新的不來" %}
 
 ## 雲麥好輕
 
 還是乖乖用軟體的方式解決吧...
 
-<div class='info' style='box-shadow: -5px 0px #ff9800;padding-left: 10px;margin-bottom: 20px'>
-先說會挑這款體重計只是因為剛好有藍芽功能符合需求而已，沒有要工商，也沒有要詆毀這個產品的意思 ^_^
-</div>
+{% include message/warn.html content="先說會挑這款體重計只是因為剛好有藍芽功能符合需求而已，沒有要工商，也沒有要詆毀這個產品的意思 " %}
 
 新入手的是「雲麥好輕 mini2」這台體脂計，優惠過後 500 塊台幣有找，可以在 Google Play 上下載專用的應用程式，連線上產品就可以使用了，有個小缺點就是他沒有記憶功能，所以每次量體重的時候都得開著 APP，還有程式一打開就要求的權限 ... 怪不能評分會如此悽慘 XD
 
@@ -69,9 +65,7 @@ categories: javascript IoT
 
 可以看到 14 和 15 位 `0212` 轉十進位是 `530`，體重的訊息在這邊，後面接的零是因為我不是真人站在上面，所以沒有體脂之類的訊息
 
-<div class='info' style='box-shadow: -5px 0px #009688;padding-left: 10px;'>
-    至於訊息中的其他資訊因為不會顯示在體重計螢幕上，可能得開 APP 來比對，這部分得靠其他大神了
-</div>
+{% include message/info.html content="至於訊息中的其他資訊因為不會顯示在體重計螢幕上，可能得開 APP 來比對，這部分得靠其他大神了" %}
 
 ## 使用 NodeJs 連接
 
@@ -142,9 +136,7 @@ function onReceiveData(data, notify) {
 <iframe width="430" height="315" src="https://www.youtube-nocookie.com/embed/36ocp1pQ10w?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
 
-<div class='info' style='box-shadow: -5px 0px #009688;padding-left: 10px;'>
-    當樹梅派上的按鈕被按下後，我們才會去連接體重計，並在量測完後馬上斷開連線
-</div>
+{% include message/info.html content="當樹梅派上的按鈕被按下後，我們才會去連接體重計，並在量測完後馬上斷開連線" %}
 
 ## 上傳資料
 
