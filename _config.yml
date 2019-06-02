@@ -43,5 +43,7 @@ disqus:
 #      Search      #
 # ---------------- #
 simple_jekyll_search:
-  fulltext: false
+  fulltext: true
   limit: 10
+google:
+  analytics_id: UA-105833854-1
