@@ -13,9 +13,11 @@ plugins:
   - jekyll-feed
   - jekyll-paginate
   - jekyll-sitemap
+  - jekyll-feed
 lsi: false
 quiet: false
 permalink: /:year/:month/:day/:title/
+subscribe_rss: /feed.xml
 # ---------------- #
 #      Author      #
 # ---------------- #
