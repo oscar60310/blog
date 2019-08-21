@@ -36,27 +36,41 @@ Chatbot 在當時正在起步，所以我們建立了一個服務讓人們可以
 
 #### 2016 HackNTU - Social Design 組第一名
 
+在為期三天的⿊客松與團隊發想並建⽴輔導⼈們使⽤各種⼿機應⽤程式的平台，獲得第⼀名。
+
 ![hackntu](/images/about/hackntu.svg)
 
 [競賽簡報](https://www.dropbox.com/s/p17akxr8eeqid05/13_%E5%8F%B0%E5%A4%A7%E9%BB%91%E5%85%8B%E6%9D%BE_%E7%B0%A1%E5%A0%B1.pptx?dl=1) / [Source Code](https://github.com/oscar60310/hackntu)
 
-#### Taipei OMG
+#### 2015 台北市政府「雲端即時開放資料服務」競賽 - 入圍
+
+利用台北市政府開放資料以及微軟的雲端服務 (Azure web service, machnine learning studio) ，完成停車場即時資料以及預測空間查詢平台，在[競賽](https://news.microsoft.com/zh-tw/2015-11-16_%E8%87%BA%E5%8C%97%E5%B8%82%E6%94%BF%E5%BA%9C%E5%85%A8%E6%96%B0%E3%80%8C%E9%9B%B2%E7%AB%AF%E5%8D%B3%E6%99%82%E9%96%8B%E6%94%BE%E8%B3%87%E6%96%99%E6%9C%8D%E5%8B%99%E3%80)中獲得入選。
+
+[Source Code](https://github.com/oscar60310/tpcar)
 
 ## Projects
 
 ### Adventrip
 
-A platform let people and companies create and share some memories about their trips.
+提供使用者或企業分享旅程紀錄的平台。
+
 ![adventrip](/images/about/adventrip.png)
-We make a different way to share your trips, combine with text descriptions, pictures, videos and the street view. Field owner can also use this platform to let more people know about them.
 
-This website use pictures EXIF data, GPS data and other information to get the position that picture shotted, then put it in Google street view or the panorama shotted by our team.
+我們創造了分享旅程的另外一種方式，結合文字解說、圖片、影片和街景畫面。不只有一般使用者，場域商家也可以藉由我們的平台推出官方版本，讓更多人了解他們的旅遊景點。
 
-Partners can decide which theme use on their product, this is a demonstration created by one of theme.
+平台使用照片的 EXIF 資料、GPS 紀錄以及其他有用的資訊來判斷拍攝的位置，自動和 Goolge Map 街景或是我們拍攝的街景對應，上傳照片後即可產出專屬的紀錄。
+
+合作夥伴們可以決定特定旅程的主題 (背景畫面、主題顏色等等)，下面是其中一個演示案例
 
 [https://view.adventrip.net/web/hoteldedeer](https://view.adventrip.net/web/hoteldedeer)
 
-### Taiwan Railway Timetable
+### 台鐵列⾞資訊查詢
+
+![train table icon](/images/about/train.svg)
+
+2014 - 2019 查詢台鐵列⾞時刻的 Android APP，可即時或離線查詢，獲得 2 萬次的下載次數和 4.63 星的評分。目前台鐵官方已經有釋出 API 以及應用程式，再透過第三方程式來讀取已經沒有必要，所以暫時將 APP 下架。
+
+官方網站 - [https://sites.google.com/site/twrailsearch/](https://sites.google.com/site/twrailsearch/)
 
 ## 能力
 
