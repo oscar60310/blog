@@ -5,7 +5,7 @@
 2. 前往秘魯 / 利馬市區 (預計 9 月底)
 3. Cusco，馬丘比丘
 4. Iquitos，亞馬遜雨林區
-5. Huaraz，Lake 69
+5. [Huaraz，Laguna 69](/2020/01/18/lake-69)
 6. Arequipa / 離開祕魯
 
 ---
