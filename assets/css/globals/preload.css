@@ -1,0 +1,10 @@
+.site-header h1 a {
+  white-space: nowrap;
+  color: #333;
+}
+a {
+  text-decoration: none;
+}
+.collection-head.small .collection-title h1.collection-header {
+  font-size: 30px;
+}
