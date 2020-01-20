@@ -8,22 +8,9 @@
 .side-collection-image {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-.collection-head {
-  padding: 1.5rem 0;
-  margin-top: -20px;
-  margin-bottom: 20px;
-  background: url(/assets/images/octicons-bg.png) center #302f2f;
-  box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.1);
-  color: #fff;
-}
-.collection-head.small {
-  padding: 0.8rem 0;
-}
+
 .collection-head.small .collection-title {
   padding: 10px 0;
-}
-.collection-head.small .collection-title h1.collection-header {
-  font-size: 30px;
 }
 .collection-head a {
   color: #fff;
