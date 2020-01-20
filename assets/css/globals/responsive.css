@@ -2,45 +2,57 @@
   width: auto;
   max-width: 1020px;
   padding-left: 20px;
-  padding-right: 20px
+  padding-right: 20px;
 }
 
 .mobile-visible {
-  display: none
+  display: none;
 }
 
-@media (max-width:60em) {
+.site-header h1,
+.site-header h1 .octicon {
+  font-size: 32px;
+}
+
+.site-header {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 60em) {
   .collection-card {
     width: 45%;
-    height: 225px
+    height: 225px;
   }
 }
 
-@media (max-width:35em) {
+@media (max-width: 35em) {
   .collection-card {
     width: 100%;
     max-width: 350px;
-    margin: 10px auto
+    margin: 10px auto;
   }
 }
 
-@media (max-width:50em) {
+@media (max-width: 50em) {
   .mobile-block {
     display: block;
-    float: none
+    float: none;
   }
   .mobile-hidden {
-    display: none
+    display: none;
   }
   .mobile-visible {
-    display: inline-block
+    display: inline-block;
   }
   .mobile-md-section {
-    padding: 10px 0
+    padding: 10px 0;
   }
   .column,
   .one-third-column {
-    width: 100%!important;
+    width: 100% !important;
     float: none;
   }
   .home .banner .collection-head {
@@ -63,7 +75,8 @@
     padding-bottom: 0;
     padding-top: 5px;
   }
-  .site-header h1, .site-header h1 .octicon {
+  .site-header h1,
+  .site-header h1 .octicon {
     font-size: 1em;
   }
   .site-header .site-header-nav {
@@ -72,7 +85,7 @@
     margin-bottom: 0;
   }
   .site-header .site-header-nav .site-header-nav-item {
-    padding: 0 .5rem;
+    padding: 0 0.5rem;
     margin-left: 0;
     font-size: 1rem;
     display: block;
@@ -108,22 +121,22 @@
 
   .mini-repo-list-item .owner.css-truncate-target,
   .mini-repo-list-item .repo-and-owner.css-truncate-target {
-    max-width: 300px
+    max-width: 300px;
   }
   .markdown-body h1 {
-    font-size: 2rem
+    font-size: 2rem;
   }
   .markdown-body h2 {
-    font-size: 1.4rem
+    font-size: 1.4rem;
   }
   .markdown-body h3 {
-    font-size: 1.2rem
+    font-size: 1.2rem;
   }
   .markdown-body h4 {
-    font-size: 1.1em
+    font-size: 1.1em;
   }
   .markdown-body h5 {
-    font-size: 1em
+    font-size: 1em;
   }
 
   .tools-wrapper {
@@ -131,12 +144,12 @@
   }
 }
 
-@media (max-width:20em) {
+@media (max-width: 20em) {
   .site-header-nav .site-header-nav-item {
-    min-width: 20%
+    min-width: 20%;
   }
   .collection-head .collection-info .meta-info {
     display: block;
-    margin-top: 15px
+    margin-top: 15px;
   }
 }
