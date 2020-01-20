@@ -1,53 +1,77 @@
-    <footer class="container">
-        <div class="site-footer" role="contentinfo">
-            <div class="copyright left mobile-block">
-                    © 2020
-                    <span title="{{ site.author}}">{{ site.author }}</span>
-                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
-            </div>
-
-            <ul class="site-footer-links right mobile-hidden">
-                <li>
-                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
-                </li>
-            </ul>
-            <a href="{{ site.github.repository_url }}" target="_blank" aria-label="view source code">
-                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
-            </a>
-            <ul class="site-footer-links mobile-hidden">
-                {% for nav in site.navs %}
-                <li>
-                    <a href="{{ site.url }}{{ nav.href }}" title="{{ nav.label }}" target="{{ nav.target | default: _self }}">{{ nav.label }}</a>
-                </li>
-                {% endfor %}
-                <li><a href="{{ site.url }}{{ site.subscribe_rss }}"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
-            </ul>
-
-        </div>
-    </footer>
-    <div class="tools-wrapper">
-      <a class="gotop" href="#" title="回到頂部"><span class="octicon octicon-arrow-up"></span></a>
+<footer class="container">
+  <div class="site-footer" role="contentinfo">
+    <div class="copyright left mobile-block">
+      © 2020
+      <span title="{{ site.author}}">{{ site.author }}</span>
+      <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
     </div>
-    <!-- / footer -->
-    <script src="{{ site.url }}/assets/js/geopattern.js" async onload="loadGeopattern()"></script>
-    <script src="{{ site.url }}/assets/js/prism.js"></script>
-    <link rel="stylesheet" href="{{ site.url }}/assets/css/globals/prism.css">
 
-    {% if site.google.analytics_id %}
-    <div style="display:none">
-      <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    <ul class="site-footer-links right mobile-hidden">
+      <li>
+        <a href="javascript:window.scrollTo(0,0)">TOP</a>
+      </li>
+    </ul>
+    <a href="{{ site.github.repository_url }}" target="_blank" aria-label="view source code">
+      <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+    </a>
+    <ul class="site-footer-links mobile-hidden">
+      {% for nav in site.navs %}
+      <li>
+        <a href="{{ site.url }}{{ nav.href }}" title="{{ nav.label }}"
+          target="{{ nav.target | default: _self }}">{{ nav.label }}</a>
+      </li>
+      {% endfor %}
+      <li><a href="{{ site.url }}{{ site.subscribe_rss }}"><span class="octicon octicon-rss"
+            style="color:orange;"></span></a></li>
+    </ul>
 
-        ga('create', '{{ site.google.analytics_id }}', 'auto');
-        ga('send', 'pageview');
+  </div>
+</footer>
+<div class="tools-wrapper">
+  <a class="gotop" href="#" title="回到頂部"><span class="octicon octicon-arrow-up"></span></a>
+</div>
+<!-- / footer -->
+<script src="{{ site.url }}/assets/vendor/jquery/dist/jquery.min.js"></script>
+<script src="{{ site.url }}/assets/js/jquery.toc.js"></script>
 
-      </script>
-    </div>
-    {% endif %}
-    <!-- Lozad -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async onload="loadLozad()"></script>
+<script src="{{ site.url }}/assets/js/main.js"></script>
+<script src="{{ site.url }}/assets/js/geopattern.js" async onload="loadGeopattern()"></script>
+<script src="{{ site.url }}/assets/js/prism.js"></script>
+<link rel="stylesheet" href="{{ site.url }}/assets/css/globals/prism.css">
+
+{% if site.google.analytics_id %}
+<div style="display:none">
+  <script>
+    (function (i, s, o, g, r, a, m) {
+      i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+        (i[r].q = i[r].q || []).push(arguments)
+      }, i[r].l = 1 * new Date(); a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', '{{ site.google.analytics_id }}', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</div>
+{% endif %}
+<!-- Lozad -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+<!-- CSS -->
+<link rel="stylesheet" href="{{ site.url }}/assets/vendor/octicons/octicons/octicons.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/components/collection.css" />
+<!-- <link rel="stylesheet" href="{{ site.url }}/assets/css/components/repo-card.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/sections/repo-list.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/sections/mini-repo-list.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/components/boxed-group.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/globals/common.css" />
+<link rel="stylesheet" href="{{ site.url }}/assets/css/posts/index.css" /> -->
+
+<!-- Latest compiled and minified CSS -->
+{% for css in page.css %}
+<link rel="stylesheet" href="{{ site.url }}/assets/css/{{css}}" />
+{% endfor %}
 </body>
+
 </html>
