@@ -45,3 +45,8 @@ function loadGeopattern() {
     // hljs.initHighlightingOnLoad();
   });
 }
+
+function loadLozad() {
+  const observer = lozad(); // lazy loads elements with default selector as '.lozad'
+  observer.observe();
+}
