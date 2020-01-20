@@ -1,7 +1,7 @@
     <footer class="container">
         <div class="site-footer" role="contentinfo">
             <div class="copyright left mobile-block">
-                    © 2019
+                    © 2020
                     <span title="{{ site.author}}">{{ site.author }}</span>
                     <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
             </div>
@@ -26,27 +26,13 @@
         </div>
     </footer>
     <div class="tools-wrapper">
-      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+      <a class="gotop" href="#" title="回到頂部"><span class="octicon octicon-arrow-up"></span></a>
     </div>
     <!-- / footer -->
     <script src="{{ site.url }}/assets/vendor/share.js/dist/js/share.min.js"></script>
-    <script src="{{ site.url }}/assets/js/geopattern.js"></script>
+    <script src="{{ site.url }}/assets/js/geopattern.js" async onload="loadGeopattern()"></script>
     <script src="{{ site.url }}/assets/js/prism.js"></script>
     <link rel="stylesheet" href="{{ site.url }}/assets/css/globals/prism.css">
-    <script>
-      jQuery(document).ready(function($) {
-        // geopattern
-        $('.geopattern').each(function(){
-          $(this).geopattern($(this).data('pattern-id'));
-        });
-       // hljs.initHighlightingOnLoad();
-      });
-    </script>
-
-    {% if page.mermaid %}
-    <script src="{{ site.url }}/assets/js/mermaid.min.js"></script>
-    <script>mermaid.initialize({startOnLoad:true});</script>
-    {% endif %}
 
     {% if page.sequence %}
     <script src="{{ site.url }}/assets/js/webfont.js"></script>
