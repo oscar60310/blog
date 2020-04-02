@@ -100,3 +100,12 @@ theme: goofy
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: ""
+
+# sass render
+node_sass:
+  outputStyle: nested
+  precision: 5
+  sourceComments: false
+
+github: oscar60310
+location: Taiwan
