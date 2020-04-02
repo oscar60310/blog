@@ -1,1 +1,5 @@
-QAQ
+<%- partial('partial/banner') %>
+
+<% page.posts.each(function(post){ %>
+<%- partial('partial/article-pre', {post: post}) %>
+<% }) %>
