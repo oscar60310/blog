@@ -1,0 +1,9 @@
+<div>
+  <div><a href="<%- post.permalink %>"><%- post.title %> </a>
+  </div>
+  <div> <% if (post.excerpt){ %>
+    <%- post.excerpt %>
+    <% } else { %>
+    <%- post.content %>
+    <% } %></div>
+</div>
