@@ -1,0 +1,12 @@
+a {
+  text-decoration: none;
+  & > :hover {
+    text-decoration: none;
+  }
+}
+
+body {
+  font-family: Arial, "Hiragino Sans GB", "冬青黑", "Microsoft YaHei",
+    "微软雅黑", SimSun, "宋体", Helvetica, Tahoma, Arial sans-serif;
+  margin: 0px;
+}

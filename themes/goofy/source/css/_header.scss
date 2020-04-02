@@ -1,0 +1,15 @@
+.site-header {
+  background: #456483;
+  color: #fff;
+  padding: 10px 20px;
+  a {
+    color: #fff;
+  }
+  .site-title {
+    font-size: 30px;
+    font-weight: 400;
+    @media screen and (max-width: 600px) {
+      font-size: 16px;
+    }
+  }
+}
