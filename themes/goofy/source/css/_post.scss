@@ -1,7 +1,7 @@
 .post {
   .post-description {
     color: #fff;
-    padding: $padding;
+    padding: $padding 0;
     h1 {
       font-size: 30px;
       font-weight: 400;
@@ -29,11 +29,47 @@
       }
     }
   }
+  .post-content {
+    display: flex;
+  }
   .content {
-    padding: $padding;
-    max-width: 800px;
+    width: calc(100% - #{$side-bar-width + 2 * $padding});
     a {
       color: #4183c4;
+    }
+  }
+  @media screen and (max-width: 600px) {
+    .content {
+      width: 100%;
+    }
+  }
+
+  h1::before,
+  h2::before,
+  h3::before,
+  h4::before,
+  h5::before,
+  h6::before {
+    display: block;
+    content: " ";
+    height: 60px;
+    margin-top: -60px;
+    visibility: hidden;
+  }
+  .side-bar {
+    width: $side-bar-width;
+    padding-left: $padding;
+  }
+  .toc {
+    width: $side-bar-width;
+    &.toc-fix {
+      position: fixed;
+      top: 0;
+    }
+  }
+  @media screen and (max-width: 600px) {
+    .toc {
+      display: none;
     }
   }
 }
