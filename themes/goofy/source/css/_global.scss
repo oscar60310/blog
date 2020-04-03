@@ -1,4 +1,5 @@
 $padding: 20px;
+$side-bar-width: 200px;
 
 a {
   text-decoration: none;
@@ -16,4 +17,23 @@ body {
 .v-center {
   display: flex;
   justify-items: center;
+}
+
+.box {
+  display: flex;
+  justify-content: center;
+  & > div {
+    max-width: 1000px;
+    width: calc(100% - #{$padding * 2});
+  }
+  @media screen and (max-width: 600px) {
+    & > div {
+      max-width: 100%;
+      width: calc(100% - #{$padding * 2});
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
 }

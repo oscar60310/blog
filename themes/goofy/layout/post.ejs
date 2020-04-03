@@ -1,41 +1,48 @@
 <article class="post">
-  <div class="post-description geo-pattern" data-pattern="<%- page.title %>">
-    <h1>
-      <%- page.title %>
-    </h1>
-    <div class="info">
-      <div class="v-center">
-        <span class="material-icons">
-          event
-        </span>
-        <span><%- page.date.format('YYYY/M/D') %> </span>
+  <div class="box geo-pattern" data-pattern="<%- page.title %>">
+    <div class="post-description">
+      <h1>
+        <%- page.title %>
+      </h1>
+      <div class="info">
+        <div class="v-center">
+          <span class="material-icons">
+            event
+          </span>
+          <span><%- page.date.format('YYYY/M/D') %> </span>
+        </div>
+        <!-- Categories -->
+        <% if (page.categories && page.categories.length){ %>
+        <% page.categories.each(function(category) { %>
+        <div class="v-center">
+          <span class="material-icons">
+            work
+          </span>
+          <span><a href="<%- url_for(category.path) %> "><%- category.name %></a> </span>
+        </div>
+        <% }) %>
+        <% } %>
+        <!-- Tags -->
+        <% if (page.tags && page.tags.length){ %>
+        <% page.tags.each(function(tag) { %>
+        <div class="v-center">
+          <span class="material-icons">
+            turned_in
+          </span>
+          <span><a href="<%- url_for(tag.path) %> "><%- tag.name %></a> </span>
+        </div>
+        <% }) %>
+        <% } %>
       </div>
-      <!-- Categories -->
-      <% if (page.categories && page.categories.length){ %>
-      <% page.categories.each(function(category) { %>
-      <div class="v-center">
-        <span class="material-icons">
-          work
-        </span>
-        <span><a href="<%- url_for(category.path) %> "><%- category.name %></a> </span>
-      </div>
-      <% }) %>
-      <% } %>
-      <!-- Tags -->
-      <% if (page.tags && page.tags.length){ %>
-      <% page.tags.each(function(tag) { %>
-      <div class="v-center">
-        <span class="material-icons">
-          turned_in
-        </span>
-        <span><a href="<%- url_for(tag.path) %> "><%- tag.name %></a> </span>
-      </div>
-      <% }) %>
-      <% } %>
     </div>
   </div>
-  <div>
-    <div class="content"><%- page.content %></div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content"><%- page.content %></div>
+      <div class="side-bar">
+        <div class="toc">
+        </div>
+      </div>
+    </div>
   </div>
-
 </article>
