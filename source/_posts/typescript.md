@@ -7,6 +7,8 @@ categories: typescript overview
 
 我第一個使用的前端框架是 [Angular](https://angular.io/)，自然也接觸了 [Typescript](https://www.typescriptlang.org/docs/home.html)，當時並不太能體會它的好處，只覺得增加了些學習門檻罷了。後來發現習慣以後，再也沒有辦法回到原本的 JS 了 ...，就算換了框架、使用 Node，都還是以 TS 為主，這篇文章來簡單介紹 TS 基本用法，回顧看看他到底為甚麼這麼令人著迷。
 
+<!-- more -->
+
 ## Typescript 是甚麼
 
 > TypeScript is a typed superset of Javascript that complies to plain JavaScript
