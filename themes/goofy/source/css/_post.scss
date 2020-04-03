@@ -60,15 +60,16 @@
     width: $side-bar-width;
     padding-left: $padding;
   }
-  .toc {
+  .toc-box {
     width: $side-bar-width;
+    line-height: 1.5;
     &.toc-fix {
       position: fixed;
       top: 0;
     }
   }
   @media screen and (max-width: 600px) {
-    .toc {
+    .toc-box {
       display: none;
     }
   }

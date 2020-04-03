@@ -17,7 +17,7 @@ tocbot.init({
   headingSelector: "h1, h2, h3",
   // For headings inside relative or absolute positioned containers within content.
   hasInnerContainers: true,
-  positionFixedSelector: ".toc",
+  positionFixedSelector: ".toc-box",
   positionFixedClass: "toc-fix",
   fixedSidebarOffset: document.querySelector(".post-content").offsetTop
 });
