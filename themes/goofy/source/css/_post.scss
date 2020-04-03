@@ -29,4 +29,11 @@
       }
     }
   }
+  .content {
+    padding: $padding;
+    max-width: 800px;
+    a {
+      color: #4183c4;
+    }
+  }
 }
