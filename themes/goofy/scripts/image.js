@@ -6,7 +6,7 @@ hexo.extend.tag.register("image", function(args) {
 
   const imageSrc = url_for(`${pagePath}/${fileName}`);
 
-  let content = `<img src=${imageSrc} />`;
+  let content = `<div class="mid"><img src=${imageSrc} /></div>`;
 
   if (description) {
     content += `<p class="img-desc">${description}</p>`;
