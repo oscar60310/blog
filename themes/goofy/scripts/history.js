@@ -18,7 +18,7 @@ hexo.extend.filter.register("before_post_render", function(data) {
   return new Promise(resolve => {
     const path = fs.join(process.cwd(), "source", "_posts", `${data.slug}.md`);
     exec(
-      `git log --pretty=format:'%h,%ad,%s' --date=iso --max-count=10 ${path}`,
+      `git log --pretty=format:'%H,%ad,%s' --date=iso --max-count=10 ${path}`,
       (error, out) => {
         if (!error) data.history = getHistory(out);
         resolve(data);
