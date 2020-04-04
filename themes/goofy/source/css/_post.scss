@@ -21,6 +21,7 @@
   }
   .content {
     width: calc(100% - #{$side-bar-width + 2 * $padding});
+    line-height: 1.6;
     a {
       color: #4183c4;
     }
@@ -46,6 +47,30 @@
     }
     .msg-warn {
       box-shadow: inset 3px 0px 0px #ff9800;
+    }
+    table {
+      display: block;
+      width: 100%;
+      overflow: auto;
+      word-break: keep-all;
+      border-collapse: collapse;
+      border-spacing: 0;
+      tr {
+        background-color: #fff;
+        border-top: 1px solid #ccc;
+      }
+      tr:nth-child(2n) {
+        background-color: #f8f8f8;
+      }
+      td,
+      th {
+        padding: 6px 13px;
+        border: 1px solid #ddd;
+      }
+    }
+    h1,
+    h2 {
+      border-bottom: 1px solid #eee;
     }
   }
   @media screen and (max-width: 600px) {

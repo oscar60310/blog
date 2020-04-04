@@ -19,6 +19,7 @@
     "hexo-generator-feed": "^2.2.0",
     "hexo-generator-index": "^1.0.0",
     "hexo-generator-tag": "^1.0.0",
+    "hexo-include-markdown": "^1.0.2",
     "hexo-prism-plugin": "^2.3.0",
     "hexo-renderer-marked": "^2.0.0",
     "hexo-renderer-sass": "^0.4.0",
