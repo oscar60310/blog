@@ -36,6 +36,17 @@
       text-align: center;
       margin-top: 0;
     }
+    .msg-info,
+    .msg-warn {
+      padding-left: 10px;
+      margin-bottom: 16px;
+    }
+    .msg-info {
+      box-shadow: inset 3px 0px 0px #009688;
+    }
+    .msg-warn {
+      box-shadow: inset 3px 0px 0px #ff9800;
+    }
   }
   @media screen and (max-width: 600px) {
     .content {
