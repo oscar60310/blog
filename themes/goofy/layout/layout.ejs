@@ -4,7 +4,7 @@
 <%- partial('partial/header') %>
 
 <body>
-  <header class="site-header">
+  <header class="site-header box">
     <div class="container">
       <a class="site-title" href="<%- config.url %>" title="<%- config.title %>">
         <%- config.title %>
@@ -14,6 +14,8 @@
 
   <%- body %>
 </body>
+
+<%- partial('partial/footer') %>
 
 <%- partial('partial/csslib') %>
 <%- partial('partial/postlib') %>

@@ -107,3 +107,6 @@ node_sass:
 
 github: oscar60310
 location: Taiwan
+feed:
+  type: rss2
+  path: feed.xml
