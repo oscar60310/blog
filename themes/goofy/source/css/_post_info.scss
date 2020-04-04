@@ -1,0 +1,13 @@
+.info {
+  font-size: 16px;
+  line-height: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  & > div {
+    margin-right: 10px;
+  }
+  .material-icons {
+    font-size: 18px;
+    margin-right: 4px;
+  }
+}

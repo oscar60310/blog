@@ -1,5 +1,17 @@
 <%- partial('partial/banner') %>
 
-<% page.posts.each(function(post){ %>
-<%- partial('partial/article-pre', {post: post}) %>
-<% }) %>
+<div class="box">
+  <div>
+    <div class="article-list">
+      <% page.posts.each(function(post){ %>
+      <%- partial('partial/article-pre', {post: post}) %>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <div>
+    <%- partial('partial/page-nav') %>
+  </div>
+</div>

@@ -1,0 +1,17 @@
+.page-nav {
+  margin-top: 20px;
+  & > a,
+  & > span {
+    color: black;
+    padding: 6px 12px;
+    font-size: 13px;
+    display: inline-block;
+    border: 1px solid #e5e5e5;
+    margin-left: -1px;
+  }
+  .current {
+    background: #337ab7;
+    border-color: #337ab7;
+    color: white;
+  }
+}
