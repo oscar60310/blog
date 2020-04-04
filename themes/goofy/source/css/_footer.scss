@@ -1,0 +1,9 @@
+.footer {
+  margin: 20px 0;
+  color: #777;
+  font-size: 14px;
+  & > div {
+    display: flex;
+    justify-content: space-between;
+  }
+}
