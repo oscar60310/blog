@@ -6,4 +6,12 @@
     display: flex;
     justify-content: space-between;
   }
+  .actions {
+    display: flex;
+    .rss {
+      color: rgba(239, 174, 47, 0.5);
+      font-size: 15px;
+      margin-left: 10px;
+    }
+  }
 }
