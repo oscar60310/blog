@@ -1,0 +1,16 @@
+.history {
+  margin: 10px 0;
+  .record {
+    display: flex;
+    .hash-time {
+      width: 200px;
+    }
+    & > span:nth-child(1) {
+      font-size: 18px;
+    }
+    & > span:nth-child(2) {
+      font-size: 16px;
+      margin-left: 5px;
+    }
+  }
+}
