@@ -1,6 +1,11 @@
 <div class="footer box">
   <div>
-    <span>© <%- moment().format('YYYY') %> <%- config.author %> </span>
+    <div class="actions">
+      <span>© <%- moment().format('YYYY') %> <%- config.author %> </span>
+      <a class="material-icons rss" href="<%- url_for('feed.xml') %>" target="_blank">
+        rss_feed
+      </a>
+    </div>
     <a href="javascript:window.scrollTo(0,0)">TOP</a>
   </div>
 </div>
