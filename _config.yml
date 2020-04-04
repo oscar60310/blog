@@ -112,3 +112,6 @@ feed:
   path: feed.xml
 disqus_id: cptsai
 repo_url: https://github.com/oscar60310/blog
+include_markdown:
+  dir: source/_template # Base directory of template markdown
+  verbose: true
