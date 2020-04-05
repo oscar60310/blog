@@ -1,4 +1,4 @@
-const fs = require("path");
+const path = require("path");
 const exec = require("child_process").exec;
 const moment = require("moment");
 
@@ -16,9 +16,14 @@ const getHistory = result => {
 
 hexo.extend.filter.register("before_post_render", function(data) {
   return new Promise(resolve => {
-    const path = fs.join(process.cwd(), "source", "_posts", `${data.slug}.md`);
+    const filePath = path.join(
+      process.cwd(),
+      "source",
+      "_posts",
+      `${data.slug}.md`
+    );
     exec(
-      `git log --pretty=format:'%H,%ad,%s' --date=iso --max-count=10 ${path}`,
+      `git log --pretty=format:'%H,%ad,%s' --date=iso --max-count=10 ${filePath}`,
       (error, out) => {
         if (!error) data.history = getHistory(out);
         resolve(data);
