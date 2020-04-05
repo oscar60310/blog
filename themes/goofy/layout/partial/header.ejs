@@ -8,7 +8,9 @@
   <% if(page) { %>
   <meta property="og:url" content="<%- page.permalink	%>" />
   <meta property="og:site_name" content="<%- page.title	%>" />
+  <% if(page.date) { %>
   <meta property="article:published_time" content="<%- page.date.format('YYYY-MM-DD') %>" />
+  <% } %>
   <meta name="description" content="<%- page.excerpt %>" />
   <meta name="og:description" content="<%- page.excerpt %>" />
   <% } %>
