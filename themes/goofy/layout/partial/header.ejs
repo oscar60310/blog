@@ -5,6 +5,15 @@
   <title>
     <% if(page.title){ %> <%= page.title %> | <% } %> <%- config.title %>
   </title>
+  <% if(page) { %>
+  <meta property="og:url" content="<%- page.permalink	%>" />
+  <meta property="og:site_name" content="<%- page.title	%>" />
+  <meta property="article:published_time" content="<%- page.date.format('YYYY-MM-DD') %>" />
+  <meta name="description" content="<%- page.excerpt %>" />
+  <meta name="og:description" content="<%- page.excerpt %>" />
+  <% } %>
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
 
   <%- css('css/index') %>
 </head>

@@ -4,8 +4,8 @@
     <div id="disqus_thread"></div>
     <script>
       var disqus_config = function () {
-        this.page.url = "<%- url %>";
-        this.page.identifier = "<%- path %>";
+        this.page.url = "<%- page.permalink	 %>";
+        this.page.identifier = "<%- page.path %>";
         this.page.title = "<%- page.title %>";
       };
       (function () {
