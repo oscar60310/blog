@@ -4,11 +4,11 @@ const moment = require("moment");
 
 const getHistory = result => {
   return result.split("\n").map(row => {
-    const data = row.slice(1, row.length - 1).split(",");
+    const data = row.slice(1, row.length).split(",");
     const message = data.slice(2, data.length).join(",");
     return {
       hash: data[0],
-      time: moment(data[1], "YYYY-MM-DD HH:mm:ss Z").format("YYYY/MM/DD HH:mm"),
+      time: moment(data[1], "YYYY-MM-DD HH:mm:ss Z").utcOffset('+08:00').format("YYYY/MM/DD HH:mm"),
       message
     };
   });
