@@ -4,7 +4,7 @@ const moment = require("moment");
 
 const getHistory = result => {
   return result.split("\n").map(row => {
-    const data = row.slice(1, row.length).split(",");
+    const data = row.split(",");
     const message = data.slice(2, data.length).join(",");
     return {
       hash: data[0],
