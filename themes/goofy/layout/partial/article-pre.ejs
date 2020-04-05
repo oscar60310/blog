@@ -2,9 +2,9 @@
   <h1><a href="<%- post.permalink %>"><%- post.title %> </a>
   </h1>
   <%- partial('post-info', {page: post}) %>
-  <div> <% if (post.excerpt){ %>
+  <div class="excerpt"> <% if (post.excerpt){ %>
     <%- post.excerpt %>
     <% } else { %>
-    <%- post.content %>
+    這篇文章沒有摘要
     <% } %></div>
 </div>
