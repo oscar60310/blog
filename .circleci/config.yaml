@@ -1,0 +1,26 @@
+version: 2.1
+jobs:
+  deploy:
+    docker:
+      - image: oscar60310/release-kit:1.0.1
+    steps:
+      - checkout
+      - run:
+          name: set user
+          command: git config --global user.name $CIRCLE_USERNAME
+      - run:
+          name: set email
+          command: git config --global user.email $CIRCLE_USERNAME"@gmail.com"
+      - run:
+          name: deploy
+          command: npm run deploy
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - release:
+          filters:
+            branches:
+              only:
+                - feature/hexo
+                - master
