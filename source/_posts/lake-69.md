@@ -1,6 +1,6 @@
 ---
 title: 南美之旅－Laguna 69
-categories: [旅遊, 南美洲]
+categories: [旅遊, 南美]
 description: 2019 年夏季祕魯之旅 69 湖
 date: 2020-01-18 18:20:00 +0800
 ---
