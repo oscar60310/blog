@@ -8,6 +8,12 @@
       margin-top: 0px;
       margin-bottom: 10px;
     }
+    @media screen and (max-width: 600px) {
+      h1 {
+        font-size: 25px;
+      }
+    }
+
     a {
       color: #fff;
       &:hover {
