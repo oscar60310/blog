@@ -10,7 +10,7 @@ description: >- # this means to ignore newlines until "baseurl:"
 keywords:
 author: Ivan Tsai
 language: zh-tw
-timezone: ""
+timezone: "Asia/Taipei"
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
@@ -115,3 +115,4 @@ feed:
 disqus_id: cptsai
 repo_url: https://github.com/oscar60310/blog
 include_path: source/_template
+utcOffset: +08:00

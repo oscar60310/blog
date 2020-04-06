@@ -9,7 +9,7 @@ const getHistory = (result) => {
     return {
       hash: data[0],
       time: moment(data[1], "YYYY-MM-DD HH:mm:ss Z")
-        .utcOffset("+08:00")
+        .utcOffset(hexo.config.utcOffset)
         .format("YYYY/MM/DD HH:mm"),
       message,
     };
