@@ -24,6 +24,7 @@
     "hexo-prism-plugin": "^2.3.0",
     "hexo-renderer-marked": "^2.0.0",
     "hexo-renderer-sass": "^0.4.0",
-    "hexo-server": "^1.0.0"
+    "hexo-server": "^1.0.0",
+    "kind-of": "^6.0.3"
   }
 }
