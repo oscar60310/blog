@@ -1,7 +1,8 @@
 ---
 title: "JavaScript Hoisting"
 date: 2017-10-11 04:30:00 +0800
-categories: ["program", "javascrip"]
+categories: ["程式", "javascrip"]
+tags: ["短篇"]
 ---
 
 在 JavaScript 中，會把變數定義的部分移到最前面執行，在 [W3C](https://www.w3schools.com/js/js_hoisting.asp) 中提到:

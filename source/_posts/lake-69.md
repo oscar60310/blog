@@ -3,6 +3,7 @@ title: 南美之旅－Laguna 69
 categories: [旅遊, 南美]
 description: 69 湖位於祕魯瓦拉斯，海爬 4604 m，可以看到清澈湖泊和山頭，約需要步行 14 公里，來回大約需要五個小時。這篇文章簡單紀錄了爬山新手的旅遊過程。
 date: 2020-01-18 18:20:00 +0800
+tags: ["短篇","遊記"]
 ---
 
 [69 湖 (Luguna 69)](https://www.tripadvisor.com.tw/Attraction_Review-g737084-d3387209-Reviews-Laguna_69-Yungay_Ancash_Region.html) 位於祕魯瓦拉斯，海爬 4604 m，可以看到清澈湖泊和山頭，約需要步行 14 公里，來回大約需要五個小時。

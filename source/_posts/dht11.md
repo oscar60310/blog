@@ -1,7 +1,8 @@
 ---
 title: "使用 Node Js 讀取 DHT11 溫溼度感測器"
 date: 2017-12-08 18:48:00 +0800
-categories: ["program", "iot"]
+categories: ["程式", "iot"]
+tags: ["樹莓派","中篇"]
 ---
 
 ## 前言
