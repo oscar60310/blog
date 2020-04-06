@@ -1,6 +1,7 @@
 ---
 title: "Typescript Overview"
 date: 2019-06-16 18:00:00 +0800
+description: 我第一個使用的前端框架是 Angular，自然也接觸了 Typescript，當時並不太能體會它的好處，只覺得增加了些學習門檻罷了。後來發現習慣以後，再也沒有辦法回到原本的 JS 了 ...，就算換了框架、使用 Node，都還是以 TS 為主，這篇文章來簡單介紹 TS 基本用法，回顧看看他到底為甚麼這麼令人著迷。
 categories: ["程式", "typescript"]
 tags: ["入門","長篇"]
 ---
