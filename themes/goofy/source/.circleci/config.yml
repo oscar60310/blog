@@ -1,0 +1,38 @@
+version: 2.1
+jobs:
+  deploy:
+    docker:
+      - image: oscar60310/release-kit:1.0.1
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SO:88:b5:a2:b5:09:e6:18:af:4e:65:17:60:c7:a7:e7:e1"
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+      - run:
+          name: npm install
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: set user
+          command: git config --global user.name $CIRCLE_USERNAME
+      - run:
+          name: set email
+          command: git config --global user.email $CIRCLE_USERNAME"@gmail.com"
+      - run:
+          name: deploy
+          command: npm run deploy
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy:
+          filters:
+            branches:
+              only:
+                - feature/hexo
+                - master
