@@ -39,7 +39,7 @@ VS code 在啟動 node 程式時，其實是開啟 node 的 inspect 模式然後
 
 通常 vs code 在 attach nodejs 後，會自動讓程式繼續跑，不過如果你的 node 開得特別慢，比如說我的案例是因為需要經過 ts-node，跑起來基本上都需要超過 10 秒，這時 vs code 就沒辦法自動繼續執行了。
 
-解決方法也很簡單，你可以自己開啟 node debug server 且不要加上 brk 選項，或者在 launch.json 中，把 `timeout` 的直拉高，這樣就沒問題了。
+解決方法也很簡單，你可以自己開啟 node debug server 且不要加上 brk 選項，或者在 launch.json 中，把 `timeout` 的值拉高，這樣就沒問題了。
 
 
 # 參考資料
