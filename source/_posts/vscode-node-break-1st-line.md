@@ -1,7 +1,7 @@
 ---
 title: VS Code 起始中斷點問題
 date: 2020-04-07 23:53:27
-tags: ["問題","解決","短篇"]
+tags: ["問題","已解決","短篇"]
 categories: ["程式"]
 description: 使用 Typescript 配合 VS Code 的 debugger 時，時常會自動停在程式的第一行，這篇文章解釋了一個可能的原因和解決方法。
 ---
@@ -39,7 +39,7 @@ VS code 在啟動 node 程式時，其實是開啟 node 的 inspect 模式然後
 
 通常 vs code 在 attach nodejs 後，會自動讓程式繼續跑，不過如果你的 node 開得特別慢，比如說我的案例是因為需要經過 ts-node，跑起來基本上都需要超過 10 秒，這時 vs code 就沒辦法自動繼續執行了。
 
-解決方法也很簡單，你可以自己開啟 node debug server 且不要加上 brk 選項，或者在 launch.json 中，把 `timeout` 的直拉高，這樣就沒問題了。
+解決方法也很簡單，你可以自己開啟 node debug server 且不要加上 brk 選項，或者在 launch.json 中，把 `timeout` 的值拉高，這樣就沒問題了。
 
 
 # 參考資料
