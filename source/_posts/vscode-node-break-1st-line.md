@@ -1,7 +1,7 @@
 ---
 title: VS Code 起始中斷點問題
 date: 2020-04-07 23:53:27
-tags: ["問題","解決","短篇"]
+tags: ["問題","已解決","短篇"]
 categories: ["程式"]
 description: 使用 Typescript 配合 VS Code 的 debugger 時，時常會自動停在程式的第一行，這篇文章解釋了一個可能的原因和解決方法。
 ---
