@@ -87,3 +87,5 @@ Chatbot 在當時正在起步，所以我們建立了一個服務讓人們可以
 The template of this blog is from [mzlogin.github.io](https://github.com/mzlogin/mzlogin.github.io), thanks a lot.
 
 This site using [Hexo](https://hexo.io/) and hosting on Github Pages, you can find the source code at [github project](https://github.com/oscar60310/blog), any issue and folk is welcome.
+
+RSS: [Link](/feed.xml)
