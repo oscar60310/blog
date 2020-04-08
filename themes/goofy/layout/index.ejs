@@ -1,12 +1,13 @@
 <%- partial('partial/banner') %>
 
 <div class="box">
-  <div>
+  <div style="display: flex;">
     <div class="article-list">
       <% page.posts.each(function(post){ %>
       <%- partial('partial/article-pre', {post: post}) %>
       <% }) %>
     </div>
+    <%- partial('partial/profile') %>
   </div>
 </div>
 
