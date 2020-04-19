@@ -21,6 +21,78 @@ description: 最近在把原本使用 AWS S3 的服務轉往 Azure storage，需
 - **Service SAS** - 由 Account Key 產生，可以套用到 Storage 服務 (Blob, Queue ...) 之一。
 - **Account SAS** - 由 Account Key 產生，可以產生比 Service SAS 更多的權限，例如 Read service properties 之類的。
 
+## 使用 Account key 來產生 SAS
+這邊使用 [Javascript SDK](https://www.npmjs.com/package/@azure/storage-blob) 來示範產生 SAS，Account KEY 可以在 Storage Account 下找到：
+
+{% image azure-account-key.png "Azure portal account key" %}
+
+```typescript
+import {
+  generateBlobSASQueryParameters,
+  StorageSharedKeyCredential,
+  BlobSASPermissions,
+} from "@azure/storage-blob";
+
+const params = generateBlobSASQueryParameters(
+  {
+    containerName: "<container name>",
+    blobName: "<blob path>",
+    // read
+    permissions: BlobSASPermissions.parse("r"),
+    // expire in one minute
+    expiresOn: new Date(Date.now().valueOf() + 60000),
+  },
+  new StorageSharedKeyCredential("<account name>", "<account key>")
+);
+```
+
+這種方法雖然方便，但必須要把 Account key 傳入程式，也不能有近一步的權限控制，像是只能產出讀取權限的 SAS。Azure 提供了(也建議使用)另外一種方法來產生 SAS：
+
+## 使用 User delegation key 來產生 SAS
+使用這個方法需要多一個步驟：取得 User delegation key，您的程式必須要有 `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey` 的權限。
+
+簡單的流程如下，
+- 取得 Credential (可以藉由 [App registrations](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app) 或其他方式綁定權限)
+- 取得 User delegation key
+- 簽署 SAS
+
+```typescript
+import { DefaultAzureCredential } from "@azure/identity";
+import {
+  BlobServiceClient,
+  BlobSASPermissions,
+  generateBlobSASQueryParameters,
+} from "@azure/storage-blob";
+
+// Load default credential
+const credential = new DefaultAzureCredential();
+const blobServiceClient = new BlobServiceClient(
+  `https://<account name>.blob.core.windows.net`,
+  credential
+);
+const userDelegationKey = await blobServiceClient.getUserDelegationKey(
+  new Date(),
+  new Date(Date.now().valueOf() + 60000)
+);
+
+const params = generateBlobSASQueryParameters(
+  {
+    containerName: "<container name>",
+    blobName: "<blob path>",
+    // read
+    permissions: BlobSASPermissions.parse("r"),
+    // expire in one minute
+    expiresOn: new Date(Date.now().valueOf() + 60000),
+  },
+  userDelegationKey,
+  "<account name>"
+);
+```
+
+使用這種方式就不需要把 Account Key 傳入了，比較安全也比較有彈性。
+
+這邊文章就簡單地錄到這邊了，實際上我打算 assign role 到 scale set 上，這樣連 app secret 也不需要煩惱。我接觸 Azure storage 其實沒很久，有任何錯誤還麻煩指教😃。
+
 # References
 - [Microsoft Azure - Grant limited access to Azure Storage resources using shared access signatures (SAS)](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
 - [Microsoft Azure - Get User Delegation Key](https://docs.microsoft.com/en-us/rest/api/storageservices/get-user-delegation-key)
