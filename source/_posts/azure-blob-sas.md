@@ -49,7 +49,11 @@ const params = generateBlobSASQueryParameters(
 這種方法雖然方便，但必須要把 Account key 傳入程式，也不能有近一步的權限控制，像是只能產出讀取權限的 SAS。Azure 提供了(也建議使用)另外一種方法來產生 SAS：
 
 ## 使用 User delegation key 來產生 SAS
-使用這個方法需要多一個步驟：取得 User delegation key，您的程式必須要有 `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey` 的權限。
+使用這個方法需要多一個步驟：取得 User delegation key，您的程式必須要有下列權限
+
+```
+Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey
+```
 
 簡單的流程如下，
 - 取得 Credential (可以藉由 [App registrations](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app) 或其他方式綁定權限)
