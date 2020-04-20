@@ -8,7 +8,7 @@
         this.page.identifier = "<%- page.path %>";
         this.page.title = "<%- page.title %>";
       };
-      (function () {
+      const loadDisqus = () => {
         // DON'T EDIT BELOW THIS LINE
         var d = document,
           s = d.createElement("script");
@@ -21,9 +21,16 @@
 
         s.setAttribute("data-timestamp", +new Date());
         (d.head || d.body).appendChild(s);
-      })();
+      };
+      const onScroll = () => {
+        const dom = document.querySelector('.disqus');
+        if (window.outerHeight + window.scrollY > dom.offsetTop) {
+          window.removeEventListener('scroll', onScroll);
+          loadDisqus();
+        }
+      }
+      window.addEventListener('scroll', onScroll)
     </script>
-
   </div>
 </div>
 
