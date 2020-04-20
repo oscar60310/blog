@@ -1,4 +1,4 @@
-hexo.extend.tag.register("image", function(args) {
+hexo.extend.tag.register("image", function (args) {
   const fileName = args[0];
   const description = args[1];
   let responsive = false;
@@ -16,6 +16,7 @@ hexo.extend.tag.register("image", function(args) {
   if (responsive) {
     content = `<div class="mid">
     <img
+      alt="${description || fileName}"
       class="lozad"
       data-src="${imageSrc}-w800.jpg"
       data-srcset="
@@ -27,7 +28,9 @@ hexo.extend.tag.register("image", function(args) {
     />
   </div>`;
   } else {
-    content = `<div class="mid"><img src=${imageSrc} /></div>`;
+    content = `<div class="mid"><img src=${imageSrc}  alt="${
+      description || fileName
+    }"/></div>`;
   }
 
   if (description) {
