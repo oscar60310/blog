@@ -16,7 +16,7 @@ description: 使用 Node JS 來了解和 DHT11 感測器是如何溝通的。
 
 會挑選 DHT11 來深入研究是因為他是個很多人在使用的模組，規格書也相對完整許多，很適合新手閱讀 XD，這篇文章會以 [這份](http://www.micropik.com/PDF/dht11.pdf) 規格書來講解。
 
-{% image basic.png "圖片來自 <a href='http://www.micropik.com/PDF/dht11.pdf'>http://www.micropik.com/PDF/dht11.pdf</a>" %}
+{% image basic.png "圖片來自 http://www.micropik.com/PDF/dht11.pdf" %}
 
 DHT11 的 1、4 號角位分別接上 VDD 和接地，2 號腳位是和 MCU 通訊用的雙向傳輸通道，3 號角位是沒有用處的。
 
