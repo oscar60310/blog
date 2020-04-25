@@ -18,12 +18,7 @@ const getHistory = (result) => {
 
 hexo.extend.filter.register("before_post_render", function (data) {
   return new Promise((resolve) => {
-    const filePath = path.join(
-      process.cwd(),
-      "source",
-      "_posts",
-      `${data.slug}.md`
-    );
+    const filePath = data.full_source;
     exec(
       `git log --pretty=format:"%H,%ad,%s" --date=iso --max-count=10 ${filePath}`,
       (error, out) => {
