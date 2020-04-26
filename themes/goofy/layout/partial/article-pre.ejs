@@ -1,5 +1,5 @@
 <div class="article-pre">
-  <h1><a href="<%- post.permalink %>"><%- post.title %> </a>
+  <h1><a href="<%- url_for(post.path) %>"><%- post.title %> </a>
   </h1>
   <%- partial('post-info', {page: post}) %>
   <% if ( post.description ){ %>
