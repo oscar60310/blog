@@ -3,6 +3,7 @@ title: Kubernetes cluster autoscaler 介紹
 date: 2020-04-26 22:41:29
 categories: ["程式","雲端"] 
 tags: ["K8S", "CA", "Azure", "AWS", "長篇"]
+description: "在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。"
 ---
 # 甚麼是 Cluster Autoscaler (CA)
 Cluster Autoscaler (以下簡稱 CA) 是 Kubernetes 官方出的一個工具，讓你的 Cluster 依照需求伸縮，簡單來說就是幫你開/關雲端上的機器。通常會配合上 [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) (以下簡稱 HPA) 一起使用，當 Pod 記憶體/CPU 或其他指標達到一定標準後，擴展 Pod，當沒有足夠的機器 (Node) 來執行 Pod 時，CA 就會幫你擴展機器。相反的需求下降時，HPA 降低 Pod 數量，CA 也會關閉不需要的機器，如此一來就可以節省成本又可以達到同樣的運算能力。
@@ -17,6 +18,8 @@ CA 會在兩個時候嘗試調整群集大小：
 
 - 有 Pod 因為資源不足的關係沒辦法執行。
 - 有 Node 使用量不足而且上面跑的 Pod 是可以被移動到其他地方的。
+
+我很喜歡 CA 的其中一點是他是「間接」影響群集的運作，當需要放大群集時，他調整機器需求量，讓雲端供應商安排機器，當需要關閉機器時，讓 K8S 驅逐在機器上的 Pod，好讓機器可以安心地關閉，讓我們來看看到底是如何做到的吧！
 
 ### Scale Up
 
