@@ -25,7 +25,9 @@ CA 會在兩個時候嘗試調整群集大小：
 
 每隔 10 秒 (這個時間可以由 `--scan-interval` flag 來調整) ，CA 會去群集看看 Pod 們的狀態，每當 K8S 沒有辦法將 Pod 順利安排執行環境的時候，會將其狀態設定為 `schedulable = false`，CA 就是在找有沒有這樣的 Pod 存在。
 
-找到以後 CA 會看看自己的 Node Group (相同機器的組合，我們可以設定想要的數量和設定，雲端負責準備好這些機器，像是 AWS 中的 Auto scale group，Azure 中的 VMSS)，看有沒有可以放大而且放大以後這個 Pod 可以跑在上面的 (有沒有滿足資源要求、Node Selector) ，有的話就調整 Node Group 大小，並等待機器啟動且加入群集，等 15 分鐘 (這就需要看雲端而定了，通常 3 到 5 分鐘就可以準備完成)，讓 K8S 重新安排這個 Pod 執行。
+{% image ca-scale-up.svg "Scale up 示意圖" full %}
+
+找到以後 CA 會看看自己的 Node Group (相同機器的組合，我們可以設定想要的數量和設定，雲端負責準備好這些機器，像是 AWS 中的 Auto scale group，Azure 中的 VMSS)，看有沒有可以放大而且放大以後這個 Pod 可以跑在上面的 (有沒有滿足資源要求、Node Selector) ，有的話就調整 Node Group 大小，並等待機器啟動且加入群集，等 15 分鐘 (這就需要看雲端而定了，通常 3 到 5 分鐘就可以準備完成)，讓 K8S 重新安排這個 Pod 執行。 
 
 # 與雲端整合
 
