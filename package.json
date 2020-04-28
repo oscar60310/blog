@@ -6,7 +6,7 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
-    "server": "hexo server"
+    "server": "cross-env develop=true hexo server"
   },
   "hexo": {
     "version": "4.2.0"
@@ -30,5 +30,8 @@
     "humanize-duration": "^3.22.0",
     "kind-of": "^6.0.3",
     "read-time-estimate": "0.0.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2"
   }
 }
