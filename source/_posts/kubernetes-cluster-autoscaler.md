@@ -29,6 +29,18 @@ CA 會在兩個時候嘗試調整群集大小：
 
 找到以後 CA 會看看自己的 Node Group (相同機器的組合，我們可以設定想要的數量和設定，雲端負責準備好這些機器，像是 AWS 中的 Auto scale group，Azure 中的 VMSS)，看有沒有可以放大而且放大以後這個 Pod 可以跑在上面的 (有沒有滿足資源要求、Node Selector) ，有的話就調整 Node Group 大小，並等待機器啟動且加入群集，等 15 分鐘 (這就需要看雲端而定了，通常 3 到 5 分鐘就可以準備完成)，讓 K8S 重新安排這個 Pod 執行。 
 
+### Scale Down
+
+在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，而且沒有禁止驅除，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。
+
+CA 關閉 Node 的方式也很有趣，他會把 Pod 驅逐到別的 Node 上，並在 Node 上加上 [Taint](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)，防止 K8S 再把 Pod 排回去。
+
+TBD: Scale down scenario
+
+TBD: Which node will be terminated in same group.
+
+
+
 # 與雲端整合
 
 ## AWS
