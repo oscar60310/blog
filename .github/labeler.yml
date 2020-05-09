@@ -1,0 +1,9 @@
+articles:
+  - source/_posts/*
+
+config:
+  - .*/**/*
+  - _config.yaml
+
+theme:
+  - theme/*/**
