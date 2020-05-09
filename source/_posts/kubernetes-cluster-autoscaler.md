@@ -2,13 +2,17 @@
 title: Kubernetes cluster autoscaler 介紹
 date: 2020-04-26 22:41:29
 categories: ["程式","雲端"] 
-tags: ["K8S", "CA", "Azure", "AWS", "長篇"]
+tags: ["K8S", "CA", "Azure", "AWS", "中篇"]
 description: "在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。"
 ---
 # 甚麼是 Cluster Autoscaler (CA)
 Cluster Autoscaler (以下簡稱 CA) 是 Kubernetes 官方出的一個工具，讓你的 Cluster 依照需求伸縮，簡單來說就是幫你開/關雲端上的機器。通常會配合上 [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) (以下簡稱 HPA) 一起使用，當 Pod 記憶體/CPU 或其他指標達到一定標準後，擴展 Pod，當沒有足夠的機器 (Node) 來執行 Pod 時，CA 就會幫你擴展機器。相反的需求下降時，HPA 降低 Pod 數量，CA 也會關閉不需要的機器，如此一來就可以節省成本又可以達到同樣的運算能力。
 
 ## HPA
+
+HPA 是 K8S 內建的元件，他監測 Deployment (或 Replication controller 等等) 中資源的使用量，當使用量超過一定標準時 (由使用者定義)，增加 Pod，反之移除不必要的 Pod。
+
+HPA 只會調整 Pod 的數量，他並不會處理群集資源不足的問題，此時就需要 CA 來調整群集大小。
 
 ## 擴展原理
 
@@ -41,11 +45,113 @@ CA 會視情況決定關閉機器的順序以及數量，他會防止同一個�
 
 # 與雲端整合
 
+會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 [Github - CA](Kubernetes cluster autoscaler )。這裡我簡單見紹自己有部屬過的兩個平台：
+
 ## AWS
+
+[說明文件](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md)
+
+### 權限設定
+
+在 AWS 上 CA 是和 [Auto Scaling Groups](https://docs.aws.amazon.com/zh_tw/autoscaling/ec2/userguide/create-asg-from-instance.html) (以下簡稱 ASG) 配合使用的，建立好 ASG 或使用 [Managed node groups](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html) (同樣會產生 ASG，1.14 版本後支援) 後，我們需要給 CA 開一個 IAM Role，並且有這些權限：
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeLaunchConfigurations",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+如果妳的 ASG 有可能需要由 0 個 Node 啟動的話，還需要 `autoscaling:DescribeLaunchConfigurations` 或 `ec2:DescribeLaunchTemplateVersions` 權限，看你的 ASG 使用的是哪一種。因為沒有 Node 時，CA 必須要看 ASG 的設定來推估這個 ASG 會開啟哪一種 VM。
+
+至於要怎麼把權限給 CA 這裡就不多做敘述了，官方的建議作法是使用 [IAM Roles for service accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) ，CA 也接受直接傳入 Access ID 和 KEY。
+
+### 註冊 ASG
+
+權限設定好後接下來就比較簡單了，妳可以和 CA 說 ASG 名稱、最小和最大的 Node 數量，CA 會自己判斷什麼時候要調整哪一個 ASG，設定檔案會像這樣 [cluster-autoscaler-multi-asg.yaml](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-multi-asg.yaml)
+
+```yaml
+command:
+  - ./cluster-autoscaler
+  - --v=4
+  - --stderrthreshold=info
+  - --cloud-provider=aws
+  - --skip-nodes-with-local-storage=false
+  - --expander=least-waste
+  - --nodes=1:10:k8s-worker-asg-1
+  - --nodes=1:3:k8s-worker-asg-2
+```
+
+需要比較注意的是 CA 不會調整 ASG 的 min/max 數量，所以這裡定義的最大最小值不可以超過 ASG 上設定的，建議可以用 [Auto Discovery](#Auto-Discovery) 來自動偵測，CA 會自動使用 ASG 上的 min/max 來當作最大最小值。
+
+### 多個 ASG
+
+CA 是支援多個 ASG 的，妳可以用 node-selector 等方式來限定 Pod 要跑在哪種機器，CA 會知道需要調整哪一個 ASG，妳也可以在同一個 ASG 中設定不同類型的 VM ([MixedInstancesPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-autoscaling-autoscalinggroup-mixedinstancespolicy.html))，不過有個基本的原則：同一個 ASG 裡面的機器必須有相同的運算資源 ( 比如說  r5.2xlarge 和  r5a.2xlarge 有相同的 CPU 和 Memory )。
 
 ## Azure
 
-# 其他技巧
+[說明文件](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure)
+
+相比 AWS，Azure 的部屬比較容易，但也有些額外的限制。
+
+Azure 的部屬分成三種 VMSS, Standard 以及 AKS，這裡會介紹兩種方式
+
+### 使用 AKS
+
+首先來說 AKS 部屬，AKS 已經幫你把 CA 內建了，在建立 AKS 的時候加上這些參數就好
+
+```sh
+--enable-cluster-autoscaler \
+--min-count 1 \
+--max-count 3
+```
+
+當然你也可以針對每個 Node Pool 設定 CA，請見 [Azure document: Automatically scale a cluster to meet application demands on Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler)。
+
+這種方法非常簡單，你不需要擔心 CA 執行的問題，權限也設定好了，但有幾個個人認為很致命的缺點：
+
+- 目前還不支援 Scale to/from zero，也就是說每一個 Node Pool 都會最少有一個 node 在運作，即使我們根本不需要。(未來會支援 [Github AKS Issue #1565](https://github.com/Azure/AKS/issues/1565))
+- CA 不受到你直接控制，需要改 CA 設定比必須藉由更新 AKS，也看不到 CA 的 Log ，增加 Debug 難度。
+
+### 使用 VMSS
+
+另一種方法就是直接對 Virtual Machine Scale Set ( 類似 ASG ，以下簡稱 VMSS ) 操作，不透過 AKS。部屬方法和 AWS 上差不多，一樣可以直接和 CA 說 VMSS 名稱或者使用 [Auto Discovery](#Auto-Discovery) 自動偵測，不過 VMSS 本身並沒有 min/max 的設定，必須要藉由 `min` 和 `max` 這兩個 tag 來告訴 CA 最大最小值。這和 AWS 運行原理不同，CA 是「有權限」把 VMSS 數量設定到界線之外的 (但他應該不會這麼做)。
+
+至於權限設定和 AWS 很類似，你可以使用像 [aad-pod-identity](https://github.com/Azure/aad-pod-identity) 的元件為每一個 Pod 設定不同的權限，CA 也接受直接提供 [service principals](https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals) 資訊。
+
+```yaml
+apiVersion: v1
+data:
+  ClientID: <base64-encoded-client-id>
+  ClientSecret: <base64-encoded-client-secret>
+  ResourceGroup: <base64-encoded-resource-group>
+  SubscriptionID: <base64-encoded-subscription-id>
+  TenantID: <base64-encoded-tenant-id>
+  Deployment: <base64-encoded-azure-initial-deploy-name>
+  VMType: c3RhbmRhcmQ=
+kind: Secret
+metadata:
+  name: cluster-autoscaler-azure
+  namespace: kube-system
+```
+
+{% info "雖然說這種方法是使用 <a href='https://github.com/Azure/aks-engine'>aks-engine</a> 部屬時用的，但實際測試也可以用在 AKS 上 (不啟用預設的 Auto Scaler)，不過官方文件沒有找到相關的說明。" %}
+
+
+
+#  其他技巧
 ## Node template
 
 ## ConfigMap
