@@ -6,4 +6,4 @@ config:
   - _config.yaml
 
 theme:
-  - theme/*/**
+  - themes/*/**
