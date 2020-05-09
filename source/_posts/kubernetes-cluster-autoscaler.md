@@ -19,7 +19,7 @@ CA 會在兩個時候嘗試調整群集大小：
 - 有 Pod 因為資源不足的關係沒辦法執行。
 - 有 Node 使用量不足而且上面跑的 Pod 是可以被移動到其他地方的。
 
-我很喜歡 CA 的其中一點是他是「間接」影響群集的運作，當需要放大群集時，他調整機器需求量，讓雲端供應商安排機器，當需要關閉機器時，讓 K8S 驅逐在機器上的 Pod，好讓機器可以安心地關閉，讓我們來看看到底是如何做到的吧！
+當需要放大群集時，他調整機器需求量，讓雲端供應商安排機器，當需要關閉機器時，讓 K8S 驅逐在機器上的 Pod，好讓機器可以安心地關閉，讓我們來看看到底是如何做到的吧！
 
 ### Scale Up
 
@@ -31,15 +31,13 @@ CA 會在兩個時候嘗試調整群集大小：
 
 ### Scale Down
 
-在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，而且沒有禁止驅除，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。
+在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，而且沒有禁止驅逐，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。
 
-CA 關閉 Node 的方式也很有趣，他會把 Pod 驅逐到別的 Node 上，並在 Node 上加上 [Taint](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)，防止 K8S 再把 Pod 排回去。
+CA 關閉 Node 的方式也很有趣，他會把 Pod 驅逐到別的 Node 上，並在 Node 上加上 [Taint](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)，防止 K8S 再把 Pod 排回去。驅逐 Pod 後刪除 Node 的方式就因雲端平台而異了，這部分屬於 [Node Controller](https://kubernetes.io/docs/concepts/architecture/cloud-controller/#node-controller) 的工作。
 
-TBD: Scale down scenario
+{% image ca-scale-down.svg "Scale down 示意圖" full %}
 
-TBD: Which node will be terminated in same group.
-
-
+CA 會視情況決定關閉機器的順序以及數量，他會防止同一個時間驅逐過多的 Pod 造成系統不穩定，所以通常會是一台一台關閉，等待系統穩定後再接著判定 Scale Down 條件。
 
 # 與雲端整合
 
