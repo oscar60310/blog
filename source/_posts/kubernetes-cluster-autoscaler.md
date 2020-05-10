@@ -1,8 +1,8 @@
 ---
 title: Kubernetes cluster autoscaler 介紹
-date: 2020-04-26 22:41:29
+date: 2020-05-10 13:51:00
 categories: ["程式","雲端"] 
-tags: ["K8S", "CA", "Azure", "AWS", "長篇"]
+tags: ["K8S", "CA", "Azure", "AWS", "中篇"]
 description: "在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。"
 ---
 # 甚麼是 Cluster Autoscaler (CA)
@@ -45,7 +45,7 @@ CA 會視情況決定關閉機器的順序以及數量，他會防止同一個�
 
 # 與雲端整合
 
-會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 [Github - CA](Kubernetes cluster autoscaler )。這裡我簡單見紹自己有部屬過的兩個平台：
+會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 [Github - kubernetes/autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#deployment)。這裡我簡單介紹自己有部屬過的兩個平台：
 
 ## AWS
 
@@ -90,15 +90,17 @@ command:
   - --cloud-provider=aws
   - --skip-nodes-with-local-storage=false
   - --expander=least-waste
-  - --nodes=1:10:k8s-worker-asg-1
+  - --nodes=2:10:k8s-worker-asg-1
   - --nodes=1:3:k8s-worker-asg-2
 ```
 
 需要比較注意的是 CA 不會調整 ASG 的 min/max 數量，所以這裡定義的最大最小值不可以超過 ASG 上設定的，建議可以用 [Auto Discovery](#Auto-Discovery) 來自動偵測，CA 會自動使用 ASG 上的 min/max 來當作最大最小值。
 
+{% image "asg.png" "AWS ASG 設定畫面"  full %}
+
 ### 多個 ASG
 
-CA 是支援多個 ASG 的，妳可以用 node-selector 等方式來限定 Pod 要跑在哪種機器，CA 會知道需要調整哪一個 ASG，妳也可以在同一個 ASG 中設定不同類型的 VM ([MixedInstancesPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-autoscaling-autoscalinggroup-mixedinstancespolicy.html))，不過有個基本的原則：同一個 ASG 裡面的機器必須有相同的運算資源 ( 比如說  r5.2xlarge 和  r5a.2xlarge 有相同的 CPU 和 Memory )。
+CA 是支援多個 ASG 的，你可以用 node-selector 等方式來限定 Pod 要跑在哪種機器，CA 會知道需要調整哪一個 ASG，你也可以在同一個 ASG 中設定不同類型的 VM ([MixedInstancesPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-autoscaling-autoscalinggroup-mixedinstancespolicy.html))，不過有個基本的原則：同一個 ASG 裡面的機器必須有相同的運算資源 ( 比如說  r5.2xlarge 和  r5a.2xlarge 有相同的 CPU 和 Memory )。
 
 ## Azure
 
