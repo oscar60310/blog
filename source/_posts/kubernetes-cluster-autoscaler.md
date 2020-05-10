@@ -35,7 +35,7 @@ CA 會在兩個時候嘗試調整群集大小：
 
 ### Scale Down
 
-在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，而且沒有禁止驅逐，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。
+在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，沒有禁止驅逐，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。
 
 CA 關閉 Node 的方式也很有趣，他會把 Pod 驅逐到別的 Node 上，並在 Node 上加上 [Taint](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions)，防止 K8S 再把 Pod 排回去。驅逐 Pod 後刪除 Node 的方式就因雲端平台而異了，這部分屬於 [Node Controller](https://kubernetes.io/docs/concepts/architecture/cloud-controller/#node-controller) 的工作。
 
@@ -45,7 +45,7 @@ CA 會視情況決定關閉機器的順序以及數量，他會防止同一個�
 
 # 與雲端整合
 
-會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 [Github - kubernetes/autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#deployment)。這裡我簡單介紹自己有部屬過的兩個平台：
+會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 [Github - kubernetes/autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#deployment)。這裡我簡單介紹自己有部屬過兩個平台部屬上需要注意的地方：
 
 ## AWS
 
@@ -80,7 +80,7 @@ CA 會視情況決定關閉機器的順序以及數量，他會防止同一個�
 
 ### 註冊 ASG
 
-權限設定好後接下來就比較簡單了，妳可以和 CA 說 ASG 名稱、最小和最大的 Node 數量，CA 會自己判斷什麼時候要調整哪一個 ASG，設定檔案會像這樣 [cluster-autoscaler-multi-asg.yaml](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-multi-asg.yaml)
+權限設定好後接下來就比較簡單了，你可以和 CA 說 ASG 名稱、最小和最大的 Node 數量，CA 會自己判斷什麼時候要調整哪一個 ASG，設定檔案會像這樣 [cluster-autoscaler-multi-asg.yaml](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-multi-asg.yaml)
 
 ```yaml
 command:
@@ -160,7 +160,7 @@ metadata:
 
 ## Auto Discovery
 
-CA 在 [Azure](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md#auto-discovery-setup) 和 [AWS](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup) 都支援使用 Auto dicovery 的方式設定 node，只需要加上 `--node-group-auto-discovery` 這個 flag，並告訴 CA 甚麼 Tag 的 ASG/VMSS 是可以拿來當作 node groups 的，官方建議使用這兩個 tag 確保不會多個群集可以同時運作。
+CA 在 [Azure](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md#auto-discovery-setup) 和 [AWS](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup) 都支援使用 Auto dicovery 的方式設定 node，只需要加上 `--node-group-auto-discovery` 這個 flag，並告訴 CA 甚麼 Tag 的 ASG/VMSS 是可以拿來當作 node groups 的，官方建議使用這兩個 tag 確保多個群集可以同時運作。
 
 ```yaml
 k8s.io/cluster-autoscaler/<YOUR CLUSTER NAME>
