@@ -2,7 +2,7 @@
 title: Kubernetes cluster autoscaler 介紹
 date: 2020-04-26 22:41:29
 categories: ["程式","雲端"] 
-tags: ["K8S", "CA", "Azure", "AWS", "中篇"]
+tags: ["K8S", "CA", "Azure", "AWS", "長篇"]
 description: "在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。"
 ---
 # 甚麼是 Cluster Autoscaler (CA)
@@ -112,7 +112,8 @@ Azure 的部屬分成三種 VMSS, Standard 以及 AKS，這裡會介紹兩種方
 
 首先來說 AKS 部屬，AKS 已經幫你把 CA 內建了，在建立 AKS 的時候加上這些參數就好
 
-```sh
+```bash
+az aks create \
 --enable-cluster-autoscaler \
 --min-count 1 \
 --max-count 3
@@ -152,13 +153,77 @@ metadata:
 
 
 #  其他技巧
+
+基本介紹和部屬就到這邊了，最後和大家分享一些實用的小技巧。
+
+## Auto Discovery
+
+CA 在 [Azure](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md#auto-discovery-setup) 和 [AWS](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup) 都支援使用 Auto dicovery 的方式設定 node，只需要加上 `--node-group-auto-discovery` 這個 flag，並告訴 CA 甚麼 Tag 的 ASG/VMSS 是可以拿來當作 node groups 的，官方建議使用這兩個 tag 確保不會多個群集可以同時運作。
+
+```yaml
+k8s.io/cluster-autoscaler/<YOUR CLUSTER NAME>
+k8s.io/cluster-autoscaler/enabled
+```
+
+CA 會自動判斷 node groups 的最大和最小值，在 Azure 上必須加上而外的 tag `min` 和 `max`，CA 每隔一段時間會去抓一次 Cloud 上的設定，所以動態設定 Tags/ASG 理論上是可行的。
+
 ## Node template
+
+當你的 Node Group 有可能會全數關閉時 (Scale to zero)，Pod 又有特殊的 Node selector 時，我們必須告訴 CA 這個 Node Group 開啟時會產生什麼 label 或 taint。
+
+比如說我們有一個 Pod 下了這樣的 Node Selector：
+
+```yaml
+nodeSelector:
+  disktype: ssd
+```
+
+此時我們必須在對應的 Node Group 上加上特殊的 Tag，稱為 Node Template，以上面的例子為例 Tag 會長的像這樣：
+
+```bash
+k8s.io/cluster-autoscaler/node-template/label/disktype=ssd
+```
+
+{% warn "在 Azure 中需要把斜線 / 換成底線 _，因為 Azure tag 不允許有斜線" %}
+
+Taint 也是同樣的道理，需要注意的是 Node Template 是告訴 CA 我的 Node 「將會」有甚麼樣的 Label / Taint ，CA 並不會主動幫 Node 加上這些資訊，還是得靠其他方式加入，例如 EKS 中可以使用 `--kubelet-extra-args` 在啟動時加上資訊 ([詳細資料](https://github.com/awslabs/amazon-eks-ami/blob/master/files/bootstrap.sh))。
 
 ## ConfigMap
 
-## Auto Discovery
+CA 成功啟動後會在相同的 Namespace 底下建立 configmap `cluster-autoscaler-status`，這裡會有 CA 的最新狀態，[使用 AKS](#使用-AKS) 時這個 configmap 非常實用。
+
+```yaml
+$ kubectl get configmap -n kube-system cluster-autoscaler-status -o yaml
+
+status: |+
+    Cluster-autoscaler status at 2020-05-10 05:19:13.877534294 +0000 UTC:
+    Cluster-wide:
+      Health:      Healthy (ready=3 unready=0 notStarted=0 longNotStarted=0 registered=3 longUnregistered=0)
+                   LastProbeTime:      2020-05-10 05:19:13.718138783 +0000 UTC m=+1457411.069735333
+                   LastTransitionTime: 2020-04-23 08:30:40.150207115 +0000 UTC m=+97.501803660
+      ScaleUp:     NoActivity (ready=3 registered=3)
+                   LastProbeTime:      2020-05-10 05:19:13.718138783 +0000 UTC m=+1457411.069735333
+                   LastTransitionTime: 2020-04-23 08:30:40.150207115 +0000 UTC m=+97.501803660
+      ScaleDown:   NoCandidates (candidates=0)
+                   LastProbeTime:      2020-05-10 05:19:13.718138783 +0000 UTC m=+1457411.069735333
+                   LastTransitionTime: 2020-04-23 08:30:40.150207115 +0000 UTC m=+97.501803660
+
+    NodeGroups:
+      Name:        <Node group name #1>
+      Health:      Healthy (ready=0 unready=0 notStarted=0 longNotStarted=0 registered=0 longUnregistered=0 cloudProviderTarget=0 (minSize=1, maxSize=2))
+                   LastProbeTime:      0001-01-01 00:00:00 +0000 UTC
+                   LastTransitionTime: 0001-01-01 00:00:00 +0000 UTC
+      ScaleUp:     NoActivity (ready=0 cloudProviderTarget=0)
+                   LastProbeTime:      0001-01-01 00:00:00 +0000 UTC
+                   LastTransitionTime: 0001-01-01 00:00:00 +0000 UTC
+      ScaleDown:   NoCandidates (candidates=0)
+                   LastProbeTime:      2020-05-10 05:19:13.718138783 +0000 UTC m=+1457411.069735333
+                   LastTransitionTime: 2020-04-23 08:30:40.150207115 +0000 UTC m=+97.501803660
+```
 
 
 
 # Reference
 - [Github - Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)
+- [Azure - Automatically scale a cluster to meet application demands on Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler)
+
