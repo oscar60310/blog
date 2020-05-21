@@ -24,7 +24,7 @@ DHT11 的 1、4 號角位分別接上 VDD 和接地，2 號腳位是和 MCU 通�
 
 一次的資料傳輸會有 `40bit` 的資料，依照順序分別代表：
 
-{% image code.svg %}
+{% image code.svg 資料圖示 full %}
 
 這個範例代表的是
 濕度 00110101 = 53 %
@@ -37,7 +37,7 @@ DHT11 的 1、4 號角位分別接上 VDD 和接地，2 號腳位是和 MCU 通�
 
 DHT11 沒事不會一直送資料，所以只接受腳位的輸入是沒辦法拿資料的，我們必須傳送一個 `起始訊號` 給 DHT11，當他接受到訊號時，便會由低功耗模式轉為運作模式，訊號結束後就會回應資料給 MCU，整個傳輸流程如下
 
-{% image trans.svg 傳輸流程圖 %}
+{% image trans.svg 傳輸流程圖 full %}
 
 最前面的訊號事就是起始訊號，是由 MCU 發出的，將原本的高電位拉低大約 18 ms 後回到高電位，接著把控制權交給 DHT11，使用 [RPIO](https://github.com/jperkin/node-rpio) 程式可以這麼寫：
 
@@ -69,13 +69,13 @@ rpio.readbuf(pin, buf);
 ## 解析回應
 
 Buffer 拿到的結果長這個樣子
-{% image raw-1.svg %}
+{% image raw-1.svg "" full %}
 中間的部分就是資料的回應，由於每次讀取的速度都不太一樣，所以我的 Buffer 取得比較大一些。把中間部分訊號放大來看的話
-{% image sig2.svg %}
+{% image sig2.svg "" full %}
 前後為起始、結束訊號，中間資料部分每個拉底拉高為一個 bit，低電位的時間都為 50 us，高電位時間 26us 代表 bit 0，70 us 代表 bit 1，如下面這張圖
-{% image bit.svg %}
+{% image bit.svg "" full %}
 試著把所有訊號分割來看
-{% image decode.svg %}
+{% image decode.svg "" full %}
 得到
 00101110 = 46 (濕度)
 00000000
