@@ -29,6 +29,7 @@
     "hexo-server": "^1.0.0",
     "humanize-duration": "^3.22.0",
     "kind-of": "^6.0.3",
+    "prismjs": "^1.21.0",
     "read-time-estimate": "0.0.2"
   },
   "devDependencies": {
