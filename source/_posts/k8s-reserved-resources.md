@@ -1,10 +1,14 @@
 ---
-title: Kubernetes reserved resources
+title: Kubernetes 上的保留資源
 date: 2020-08-22 21:20:22
 tags: ["K8S", "Azure", "AWS", "短篇"]
 categories: ["程式","雲端"]
-description: ""
+description: "最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod 很容易被驅逐，查了一下才發現原來我們不能用盡 Node 上的所有資源，這篇文章就來看看我們必須留下多少資源給系統吧。"
 ---
+
+最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod 很容易被驅逐，查了一下才發現原來我們不能用盡 Node 上的所有資源，這篇文章就來看看我們必須留下多少資源給系統吧。
+
+# Node Capacity
 
 在 Kubernetes 上執行 Pod 的時候，我們可以指定 [Resource Request/Limit](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) 來告訴 K8S 我們的程式需要多少的資源來運行，K8S 會自動幫我們安排到有符合條件的節點上，像下面這樣：
 
@@ -84,6 +88,32 @@ memory_to_reserve=$((11 * $max_num_pods + 255))
 
 例如 t3.medium 可以跑 17 個 pod，就會有 17 * 11 + 255 = 442 MB 的資源被保留，可以參考 EKS AMI Image 的 [bootstrap script](https://github.com/awslabs/amazon-eks-ami/blob/v20200723/files/bootstrap.sh#L167)。
 
+## Eviction Threshold
+
+這個設定就很有趣了，當 Node 上可以使用的資源 (Capacity - reserved - 已經被使用的資源) 小於這個數值時，kubelet 就會開始驅逐 (Eviction) Pod，直到資源回復到正常數值為止，來避免 Node 遭到破壞(例如 k8s 系統沒有足夠的資源，造成 Node 離線等等)。
+
+在 AWS 上，這個值固定為 `100MB` ，可以參考 EKS AMI Image 的 [bootstrap script](https://github.com/awslabs/amazon-eks-ami/blob/v20200723/files/bootstrap.sh#L301)。
+
+在 Azure 上，這個值固定為 `750MB`，可以參考[官方文件](https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads#resource-reservations)。
+
+
+
+# 雲端服務遇到的問題
+
+如果是自己建立的 K8S Cluster ，上面提到的設定都可以自己控制，但雲端服務提供的 Kubernetes Service 就不是這麼好調整了。
+
+其實會讓我注意到 Node Allocatable 的原因是我們在 Azure 上發現 Pod 很容易被驅逐，仔細查看才發現原來系統必須保留這麼多的資源，以 DS2 v2 的機器來說，原本可用的記憶體為 7GiB，但仔細算一算保留資源
+
+```txt
+0.75 + (0.25*4) + (0.20*3) = 0.75GB + 1GB + 0.6GB = 2.35GB / 7GB = 33.57% reserved
+```
+
+1/3 的記憶體必須給系統保留 😂
+
+這個問題官方有說明原因以及暫時的解決辦法 ([AKS Github](https://github.com/Azure/AKS/issues/1216))，不過到目前為止其實沒有正規的手法來調整。
+
 # References
 - [Kubernetes document - Reserve Compute Resources for System Daemons](https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/)
+- [AKS Github Issue #1216](https://github.com/Azure/AKS/issues/1216)
+- [EKS AMI Github](https://github.com/awslabs/amazon-eks-ami/)
 
