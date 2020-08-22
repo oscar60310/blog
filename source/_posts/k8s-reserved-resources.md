@@ -10,7 +10,7 @@ description: "最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod �
 
 # Node Capacity
 
-在 Kubernetes 上執行 Pod 的時候，我們可以指定 [Resource Request/Limit](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) 來告訴 K8S 我們的程式需要多少的資源來運行，K8S 會自動幫我們安排到有符合條件的節點上，像下面這樣：
+在 Kubernetes 上執行 Pod 的時候，我們可以指定 [Resource Request/Limit](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) 來告訴 K8S 我們的程式需要多少的資源來運行，K8S 會自動幫我們安排到符合條件的節點上，像下面這樣：
 
 ```yaml
 resources:
@@ -22,7 +22,7 @@ resources:
     cpu: "500m"
 ```
 
-一個節點的資源量是固定的，稱為 Node Capacity，例如在 AWS 上開 t3.medium 等級的 Node，就會有差不多 4GB 的記憶體可以使用。但在機器上其實還會有一些不受群集控制的程式在運作 (例如 OS 程式、Kubernetes 本人等等)，這時候如果還是按照 Capacity 區分配的話，就可能會發生問題，所以 K8S 提供了 Node Allocatable 這個功能。
+一個節點的資源量是固定的，稱為 Node Capacity，例如在 AWS 上開 t3.medium 等級的 Node，就會有差不多 4GiB 的記憶體可以使用。但在機器上其實還會有一些不受群集控制的程式在運作 (例如 OS 程式、Kubernetes 本人等等)，這時候如果還是按照 Capacity 去分配的話，就可能會發生問題，所以 K8S 提供了 Node Allocatable 這個功能。
 
 # Node Allocatable 
 
@@ -45,7 +45,7 @@ Allocatable:
   pods:               110
 ```
 
-大約有 100 MB 的記憶體被保留起來，這個雲端服務中例如 AKS / EKS  會更大，在文章末會說明，我們先來看看 Allocatable 是怎麼計算出來的。
+上面的測試環境中大約有 100 MB 的記憶體被保留起來，這個數值在雲端服務中例如 AKS / EKS  會更大，在文章末會說明，我們先來看看 Allocatable 是怎麼計算出來的。
 
 ```txt
 	  Node Capacity
@@ -64,11 +64,11 @@ Allocatable:
 ---------------------------
 ```
 
-這個來自官網的圖示可以發現 Allocatable 其實是 Capacity 扣除 reserved resource 和 eviction threshold 出來的，我們來一一介紹他們。
+這個來自官網的圖示可以發現 Allocatable 其實是 Capacity 扣除 reserved resource 和 eviction threshold 出來的，我們來一一介紹他們，其實比較會出問題的是記憶體的部分，所以下方都會以記憶體來討論，但其他資源 (CPU, storage, pid 等等)也都有對應的保留設定。
 
 ## Kube/System Reserved
 
-這兩個著值代表的是預留給 Kubernetes 和 OS 程式的資源，可以使用 `--kube-reserved` 和 `--system-reserved` 來複寫，通常 system reserved 不會變動，kube reserved 則會根據 Node 上可以跑的 Pod 數量來決定。
+這兩個著值代表的是預留給 Kubernetes 和 OS 程式的資源，可以使用 `--kube-reserved` 和 `--system-reserved` 來覆寫，通常 system reserved 不會變動，kube reserved 則會根據 Node 上可以跑的 Pod 數量來決定。
 
 在 Azure (AKS) 上，kube reserved memory 是根據 Node capacity 來決定的，計算方式如下：
 
@@ -90,7 +90,7 @@ memory_to_reserve=$((11 * $max_num_pods + 255))
 
 ## Eviction Threshold
 
-這個設定就很有趣了，當 Node 上可以使用的資源 (Capacity - reserved - 已經被使用的資源) 小於這個數值時，kubelet 就會開始驅逐 (Eviction) Pod，直到資源回復到正常數值為止，來避免 Node 遭到破壞(例如 k8s 系統沒有足夠的資源，造成 Node 離線等等)。
+這個設定就很有趣了，當 Node 上可以使用的資源 (Capacity - reserved - 已經被使用的資源) 小於這個數值時，kubelet 就會開始驅逐 (Evict) Pod，直到資源回復到正常數值為止，來避免 Node 遭到破壞(例如 k8s 系統沒有足夠的資源，造成 Node 離線等等)。
 
 在 AWS 上，這個值固定為 `100MB` ，可以參考 EKS AMI Image 的 [bootstrap script](https://github.com/awslabs/amazon-eks-ami/blob/v20200723/files/bootstrap.sh#L301)。
 
