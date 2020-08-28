@@ -3,7 +3,7 @@ title: 使用 Clasp 開發 Apps Script
 date: 2020-08-28 21:20:15
 tags: ["短篇","入門","Apps Script"]
 categories: ["程式","工具"]
-description: qaq
+description: 以前會寫一點 Google Apps Script 來協助更新 Google Sheet，前幾天突然發現她終於使用 V8 啦，甚至可以使用 Typescript 來撰寫，這篇文章來介紹實作這些功能的工具 Clasp。
 geo: google-clasp-qaqaa
 ---
 
