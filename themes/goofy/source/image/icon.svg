@@ -1,17 +1,1 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 800 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g id="left" transform="matrix(1.99005,0,0,1.78108,-101.161,-156.586)">
-        <path d="M176.458,87.917L302.083,312.5L50.833,312.5L176.458,87.917Z" style="fill:rgb(235,235,235);"/>
-    </g>
-    <g id="right" transform="matrix(1.99005,0,0,1.78108,198.839,-156.586)">
-        <path d="M176.458,87.917L302.083,312.5L50.833,312.5L176.458,87.917Z" style="fill:rgb(235,235,235);"/>
-    </g>
-    <path id="nose" d="M500,400L300,400L400,240L500,400Z" style="fill:rgb(2,148,167);"/>
-    <g transform="matrix(1,0,0,1,2.91667,-10.8333)">
-        <circle cx="247.083" cy="215.833" r="25.417" style="fill:rgb(133,133,133);"/>
-    </g>
-    <g transform="matrix(1,0,0,1,302.917,-10.8333)">
-        <circle cx="247.083" cy="215.833" r="25.417" style="fill:rgb(133,133,133);"/>
-    </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" version="1.1" viewBox="0 0 800 400" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"><g id="left"><path d="M176.458,87.917L302.083,312.5L50.833,312.5L176.458,87.917Z" transform="matrix(1.99005,0,0,1.78108,-101.161,-156.586)" style="fill:#ebebeb"/></g><g id="right"><path d="M176.458,87.917L302.083,312.5L50.833,312.5L176.458,87.917Z" transform="matrix(1.99005,0,0,1.78108,198.839,-156.586)" style="fill:#ebebeb"/></g><path id="nose" d="M500,400L300,400L400,240L500,400Z" style="fill:#0294a7"/><g transform="matrix(1,0,0,1,2.91667,-10.8333)"><circle cx="247.083" cy="215.833" r="25.417" style="fill:#858585"/></g><g transform="matrix(1,0,0,1,302.917,-10.8333)"><circle cx="247.083" cy="215.833" r="25.417" style="fill:#858585"/></g></svg>
