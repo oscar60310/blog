@@ -1,3 +1,9 @@
 <section class="banner box">
+  <% if(page && page.tag) {  %>
+  <div class="sub-title">標籤: <%- page.tag %></div>
+  <% } else if(page && page.category) { %>
+  <div class="sub-title">分類: <%- page.category %></div>
+  <% } else { %>
   <div class="sub-title"><%- config.subtitle %></div>
+  <% } %>
 </section>
