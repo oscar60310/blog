@@ -17,6 +17,11 @@
   <% } %>
   <meta property="og:type" content="article" />
   <meta property="og:locale" content="zh_TW" />
+  <% if(page.image) { %>
+  <meta property="og:image" content="<%- url_for(`${page.path}/${page.image}`)%>" />
+  <% } else { %>
+  <meta property="og:image" content="/image/icon.png" />
+  <% } %>
   <script>
     dataLayer = [{
       identifier: "<%- page.path %>"
