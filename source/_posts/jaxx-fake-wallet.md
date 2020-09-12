@@ -3,9 +3,10 @@ title: Jaxx 錢包被盜
 date: 2020-09-13 00:22:03
 tags: ["短篇","加密貨幣"]
 categories: ["雜談"]
+description: "這幾個禮拜托 YFI 的福，幣圈又開始熱絡了起來，不過在使用錢包時需要注意是不是釣魚網站或 APP，這篇文章來分享一個活生生的慘案。"
 ---
 
-這記個禮拜托 YFI 的福，幣圈又開始熱絡了起來，身邊的朋友也開始加入市場，這篇文章分享一個發生在身邊的慘案，最後的結果是錢包裡面有的錢全部被轉走。
+這幾個禮拜托 YFI 的福，幣圈又開始熱絡了起來，身邊的朋友也開始加入市場，這篇文章分享一個發生在身邊的慘案，最後的結果是錢包裡面所有的錢全部被轉走。
 如果您的錢包已經遭遇不測，請不用往下看了，這篇文章沒有提供處理方法，請節哀😥。
 
 # Jaxx
@@ -14,7 +15,7 @@ categories: ["雜談"]
 
 [Jaxx Liberty](https://jaxx.io/) 是由 [Decentral](https://decentral.ca/) 這家加拿大公司所開發的手機熱錢包，可以在手機上管理超過 90 種貨幣。
 
-他們並不會儲存我們的私鑰到伺服器，所有的私鑰都掌握在一串 12 個單字的助記詞(使用 [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)) 中，誰得到這個串字串就能存取錢包，像這個樣子:
+他們並不會儲存我們的私鑰到伺服器，所有的私鑰都掌握在一串 12 個單字的助記詞(使用 [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)) 中，誰得到這個字串就能存取錢包，像這個樣子:
 ```txt
 bridge rival rail offer until vehicle tool nose finger eager control bulb
 ```
