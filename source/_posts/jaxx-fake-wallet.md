@@ -44,3 +44,9 @@ https://www.reddit.com/r/jaxx/search/?q=fake&restrict_sr=1&type=link
 # Reference
 - [Jaxx official website](https://jaxx.io/)
 - [Reddit r/jaxx](https://www.reddit.com/r/jaxx/)
+
+<div style="
+    text-decoration: line-through;
+    width: 100%;
+    text-align: right;
+    color: gray;">這篇文章值 3ETH</div>
