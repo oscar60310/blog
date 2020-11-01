@@ -1,2 +1,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
 <script src="<%- config.url %><%- config.root %>js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
