@@ -104,6 +104,7 @@
   .side-bar {
     width: $side-bar-width;
     padding-left: $padding;
+    position: relative;
   }
   .toc-box {
     width: $side-bar-width;
@@ -111,6 +112,11 @@
     &.toc-fix {
       position: fixed;
       top: 0;
+    }
+    &.toc-scroll {
+      position: absolute;
+      bottom: 5px;
+      top: auto;
     }
   }
   @media screen and (max-width: 600px) {
