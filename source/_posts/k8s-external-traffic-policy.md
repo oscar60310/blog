@@ -141,7 +141,11 @@ target     prot opt source               destination
 MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000 random-fully
 ```
 
-也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，後面說明位什麼需要 SNAT，但我們先來看看另一種方式。
+也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，後面說明位什麼需要 SNAT。
+
+這個模式以圖解的方式大概會長這樣：
+
+{% image node-port-cluster.svg "NodePort with ExternalTrafficPolicy = cluster" full%}
 
 ### ExternalTrafficPolicy = Local
 
@@ -203,10 +207,25 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: *
 
 {% info "當從 Node1 內部打 Port 30000 時，會照正常的流程走，如同 Policy = Cluster 一樣" %}
 
+在 Node3 中的 iptables 則會把外部 Port 30000 的所有封包丟棄，因為沒有 Pod 跑在該 Node，內部一樣不受影響。
 
+```bash
+Chain KUBE-XLB-IOIC7CRUMQYLZ32S (1 references)
+target     prot opt source               destination         
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  10.244.0.0/16        0.0.0.0/0            /* Redirect pods trying to reach external loadbalancer VIP to clusterIP */
+KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            /* masquerade LOCAL traffic for default/test: LB IP */ ADDRTYPE match src-type LOCAL
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  0.0.0.0/0            0.0.0.0/0            /* route LOCAL traffic for default/test: LB IP to service chain */ ADDRTYPE match src-type LOCAL
+KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: has no local endpoints */
+```
+
+這個模式以圖解的方式大概會長這樣：
+
+{% image node-port-local.svg "NodePort with ExternalTrafficPolicy = local" full%}
 
 # References
 
 - [Kubernetes - Using Source IP](https://kubernetes.io/docs/tutorials/services/source-ip/)
 - [A Deep Dive into Kubernetes External Traffic Policies](https://www.asykim.com/blog/deep-dive-into-kubernetes-external-traffic-policies)
 - [kubernetes的Kube-proxy的iptables转发规则](https://blog.csdn.net/qq_36183935/article/details/90734847)
+- [GKE - Network overview](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0)
+
