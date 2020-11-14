@@ -1,7 +1,7 @@
 ---
 title: Kubernetes 上的 ExternalTrafficPolicy
 date: 2020-11-12 23:11:21
-tags: ["K8S", "短篇"]
+tags: ["K8S", "長篇", "進階"]
 categories: ["程式","雲端"]
 description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
 ---
@@ -16,7 +16,7 @@ description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內
 
 [kube-proxy](https://kubernetes.io/docs/concepts/overview/components/#kube-proxy) 運行在每一個 Node 上，負責實作 Service，依照不同的 Mode 有不同的行為：
 
-在 mode 為 iptables 設定下，Kube Proxy 會 Watch 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是應為他只負責西改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。
+在 mode 為 iptables 設定下，Kube Proxy 會 Watch 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是因為他只負責修改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。
 
 ## Cluster IP
 
@@ -147,6 +147,8 @@ MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes ser
 
 {% image node-port-cluster.svg "NodePort with ExternalTrafficPolicy = cluster" full%}
 
+完整的 iptables 資料請見 [node-port-cluster-iptables-nat.txt](./node-port-cluster-iptables-nat.txt)。
+
 ### ExternalTrafficPolicy = Local
 
 ```yaml
@@ -221,6 +223,8 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 這個模式以圖解的方式大概會長這樣：
 
 {% image node-port-local.svg "NodePort with ExternalTrafficPolicy = local" full%}
+
+完整的 iptables 資料請見 [node-port-local-has-no-pod-iptables-nat.txt](./node-port-local-has-no-pod-iptables-nat.txt) (Node3) 與  [node-port-local-has-pod-iptables-nat.txt](./node-port-local-has-pod-iptables-nat.txt) (Node1)。
 
 # References
 
