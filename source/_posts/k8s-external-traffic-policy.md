@@ -244,7 +244,7 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 
 # 為什麼需要 SNAT
 
-當設定 ExternalTrafficPolicy 為 Cluster 時，會在 Node 上經過一次的 SNAT 然後才到達 Pod，所以我們在 Pod 上看到的來源 IP 永遠會是 Node IP，那 Kube Proxy 為甚麼要這樣做呢，我們來看看如果沒有 NAT 的話會發生什麼事情：
+當設定 ExternalTrafficPolicy 為 Cluster 時，會在 Node 上經過一次的 SNAT 然後才到達 Pod，所以我們在 Pod 上看到的來源 IP 永遠會是 Node IP，那 Kube Proxy 為甚麼要這樣做呢，我們來看看如果沒有 NAT 的話會發生什麼事情，為了簡化我們把 Node2 移除，假設客戶端從 Node3 想要存取服務：
 
 {% image why-we-need-NAT-without-nat.svg "Routing without SNAT at arrival node" full %}
 
@@ -263,15 +263,15 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 
 那當 Service Type 為 LoadBalancer 時，雲端環境又是怎麼處理的呢？
 
-以 AKS (Azure) 為例，除了指定 NodePort 並將所有的 Node 加入 LB 的 Backend pools ackend pools 之外，還會設定 `healthCheckNodePort`，這會讓 K8S 在這個 Port 上開啟額外的 Health Check API，我們可以透過這個 API 來檢查該 Node 是不是有目標 Pod 在執行，進而控制 LB 要不要把流量往這個 Node 送，這麼一來就可以避免像上圖 Node3 一樣，沒有 EndPoint 的情況發生了。
+以 AKS (Azure) 為例，除了指定 NodePort 並將所有的 Node 加入 LB 的 Backend pools 之外，還會設定 `healthCheckNodePort`，這會讓 K8S 在這個 Port 上開啟額外的 Health Check EndPoint，我們可以透過這個 API 來檢查該 Node 是不是有目標 Pod 在執行，進而控制 LB 要不要把流量往這個 Node 送，這麼一來就可以避免像上圖 Node3 一樣，沒有 EndPoint 的情況發生了。
 
 {% image azure-lb-health-probes.png "Azure LB health probes 設定" %}
 
 # 不平衡問題
 
-最後我們來討論一下除了需要額外判斷 Node 狀態外，使用 Local Policy 會面臨的最大問題: imbalance 。一般來說我們的群集外部會有一個 Load Balancer 來將流量平均分配至所有的 Node 上，假設我們有兩個 Node (Node1, Node2)，總共執行三個 Pod，Node1 一個和 Node2 兩個。
+最後我們來討論一下除了需要額外判斷 Node 狀態外，使用 Local Policy 會面臨的最大問題: `imbalance` 。一般來說我們的群集外部會有一個 Load Balancer 來將流量平均分配至所有的 Node 上，假設我們有兩個 Node (Node1, Node2)，總共執行三個 Pod，在 Node1 上有一個，在 Node2 則有兩個。
 
-當只用預設設定時，情況應該會如下圖：
+當使用預設設定時，情況應該會如下圖：
 
 {% image imbalance-issue-cluster.svg "Network weight in Cluster Policy" full %}
 
@@ -285,7 +285,7 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 
 # 總結
 
-有關 External Traffic Policy 的探討就到這邊了，我也沒想到小小一個屬性牽涉到這麼複雜的問題，感謝前輩們的努力上我們只需要一行設定解決一切 ❤
+有關 External Traffic Policy 的探討就到這邊了，我也沒想到小小一個屬性牽涉到這麼複雜的問題，感謝前輩們的努力上我們只需要一行設定解決一切 💗
 
 若您對文章任何內容有疑慮歡迎在下方留言或直接在 Github 上開 Issue，非常感謝！
 
