@@ -226,9 +226,53 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 
 完整的 iptables 資料請見 [node-port-local-has-no-pod-iptables-nat.txt](./node-port-local-has-no-pod-iptables-nat.txt) (Node3) 與  [node-port-local-has-pod-iptables-nat.txt](./node-port-local-has-pod-iptables-nat.txt) (Node1)。
 
+
+
+# 為什麼需要 SNAT
+
+當設定 ExternalTrafficPolicy 為 Cluster 時，會在 Node 上經過一次的 SNAT 然後才到達 Pod，所以我們在 Pod 上看到的來源 IP 永遠會是 Node IP，那 Kube Proxy 為甚麼要這樣做呢，我們來看看如果沒有 NAT 的話會發生什麼事情：
+
+{% image why-we-need-NAT-without-nat.svg "Routing without SNAT at arrival node" full %}
+
+1. 首先 Client 向 Node3 (假設這個 Node 沒有 Pod 跑在上面) 發送要求。
+2. Node3 將封包轉向 Pod IP (只有 DNAT)。
+3. Pod 回應。
+4. Node1 將封包轉向 Client。
+
+這張圖可以很明顯的看出來，Client 向 Node3 發送要求，卻收到 Node1 的回應，在大多數情況這樣是行不通的，甚至在防火牆就會被擋掉。所以 Kube Proxy 才會讓 Pod 先回傳給原始的 Node，再由 Node 負責回應：
+
+{% image why-we-need-NAT-with-nat.svg "Routing with SNAT at arrival node" full %}
+
+雖然會產生額外的步驟，但也只有這樣能確保路由順暢。
+
+# Load balancer
+
+那當 Service Type 為 LoadBalancer 時，雲端環境又是怎麼處理的呢？
+
+以 AKS (Azure) 為例，除了指定 NodePort 並將所有的 Node 加入 LB 的 Backend pools ackend pools 之外，還會設定 `healthCheckNodePort`，這會讓 K8S 在這個 Port 上開啟額外的 Health Check API，我們可以透過這個 API 來檢查該 Node 是不是有目標 Pod 在執行，進而控制 LB 要不要把流量往這個 Node 送，這麼一來就可以避免像上圖 Node3 一樣，沒有 EndPoint 的情況發生了。
+
+{% image azure-lb-health-probes.png "Azure LB health probes 設定" %}
+
+# 不平衡問題
+
+最後我們來討論一下除了需要額外判斷 Node 狀態外，使用 Local Policy 會面臨的最大問題: imbalance 。一般來說我們的群集外部會有一個 Load Balancer 來將流量平均分配至所有的 Node 上，假設我們有兩個 Node (Node1, Node2)，總共執行三個 Pod，Node1 一個和 Node2 兩個。
+
+當只用預設設定時，情況應該會如下圖：
+
+{% image imbalance-issue-cluster.svg "Network weight in Cluster Policy" full %}
+
+最後每個 Pod 很平均的獲得 33% 的流量，那如果是 Local Policy 呢？
+
+{% image imbalance-issue-local.svg "Network weight in Local Policy" full %}
+
+因為 LB 對每個 Node 的權重是一樣的，所以最後 Pod1 會有 50% 的流量，而其他兩個只會有 25%，這就是所謂的負載不平衡的問題。
+
+這個問題可以藉由 Pod Affinity 來解決，確保每個 Node 上 Pod 數量是相同的就可以了。
+
 # References
 
 - [Kubernetes - Using Source IP](https://kubernetes.io/docs/tutorials/services/source-ip/)
+- [Kubernetes - Create an External Load Balancer](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/)
 - [A Deep Dive into Kubernetes External Traffic Policies](https://www.asykim.com/blog/deep-dive-into-kubernetes-external-traffic-policies)
 - [kubernetes的Kube-proxy的iptables转发规则](https://blog.csdn.net/qq_36183935/article/details/90734847)
 - [GKE - Network overview](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0)
