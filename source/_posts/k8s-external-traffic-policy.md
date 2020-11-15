@@ -4,6 +4,7 @@ date: 2020-11-12 23:11:21
 tags: ["K8S", "長篇", "進階"]
 categories: ["程式","雲端"]
 description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
+image: og-cover.png
 ---
 
 # 前言
@@ -297,3 +298,4 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 - [kubernetes的Kube-proxy的iptables转发规则](https://blog.csdn.net/qq_36183935/article/details/90734847)
 - [GKE - Network overview](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0)
 
+預覽圖 - Photo by **[Brett Sayles](https://www.pexels.com/@brett-sayles?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)** from **[Pexels](https://www.pexels.com/photo/routers-with-cables-2425567/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)**
