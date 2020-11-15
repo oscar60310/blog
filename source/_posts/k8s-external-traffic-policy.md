@@ -1,7 +1,7 @@
 ---
 title: Kubernetes 上的 ExternalTrafficPolicy
 date: 2020-11-12 23:11:21
-tags: ["K8S", "長篇", "進階"]
+tags: ["K8S", "長篇", "進階", "Azure"]
 categories: ["程式","雲端"]
 description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
 image: og-cover.png
@@ -17,7 +17,7 @@ image: og-cover.png
 
 [kube-proxy](https://kubernetes.io/docs/concepts/overview/components/#kube-proxy) 運行在每一個 Node 上，負責實作 Service，依照不同的 Mode 有不同的行為：
 
-在 mode 為 iptables 設定下，Kube Proxy 會 Watch API Server 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是因為他只負責修改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。
+在 Mode 為 iptables 設定下，Kube Proxy 會 Watch API Server 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是因為他只負責修改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。
 
 {% info "Kube-proxy 部分可以參考 <a href='https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0#kube-proxy'>GKE</a> 的說明文件" %}
 
@@ -128,7 +128,7 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: *
 
 前半段和 ClusterIP 很像，只不過多了一層 KUBE-NODEPORTS Chain，一樣做後會經由 DNAT 到 Pod。
 
-在 KUBE-NODEPORTS 中多了一個 KUBE-MARK-MASQ：
+特別的是在 KUBE-NODEPORTS 中多了一個 KUBE-MARK-MASQ：
 
 ```bash
 Chain KUBE-MARK-MASQ (15 references)
@@ -148,7 +148,7 @@ target     prot opt source               destination
 MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000 random-fully
 ```
 
-也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，而不是原始的來源，後面會說明為什麼需要 SNAT。
+也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，而不是原始的來源，文章後面會說明為什麼需要 SNAT。
 
 這個模式以圖解的方式大概會長這樣：
 
@@ -220,7 +220,7 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: *
 
 直接到 Pod IP，此時只有一個 Pod，另一個 Pod 因為跑在 Node2 的關係所以經由 Node1 是存取不到的。
 
-過程中不會被 MARK，也就不會有 SNAT 發生，Application 端看到的就會是原始的 IP 了，這也就是為什麼當想保留 Client 端 IP 時必須要設定為 Local 的關係。
+過程中不會被 MARK，也就不會有 SNAT 發生，Application 端看到的就會是原始的 IP 了，這也就是為什麼當想保留 Client 端 IP 時必須要設定為 Local 的原因。
 
 {% info "當從 Node1 內部打 Port 30000 時，會照正常的流程走，如同 Policy = Cluster 一樣" %}
 
