@@ -1,6 +1,6 @@
 ---
 title: Kubernetes 上的 ExternalTrafficPolicy
-date: 2020-11-12 23:11:21
+date: 2020-11-15 20:45:00
 tags: ["K8S", "長篇", "進階", "Azure"]
 categories: ["程式","雲端"]
 description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
