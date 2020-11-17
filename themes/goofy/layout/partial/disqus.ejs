@@ -1,37 +1,31 @@
-<% if(page && page.title && config.disqus_id) { %>
-<div class="disqus line">
-  <div>
-    <div id="disqus_thread"></div>
-    <script>
-      var disqus_config = function () {
-        this.page.url = "<%- page.permalink	 %>";
-        this.page.identifier = "<%- page.path %>";
-        this.page.title = "<%- page.title %>";
-      };
-      const loadDisqus = () => {
-        // DON'T EDIT BELOW THIS LINE
-        var d = document,
-          s = d.createElement("script");
+<% if( page && page.title ) { %>
 
-        s.type = "text/javascript";
-        s.async = true;
-        var shortname = "<%- config.disqus_id %>";
+<div id="remark42"></div>
 
-        s.src = "//" + shortname + ".disqus.com/embed.js";
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
 
-        s.setAttribute("data-timestamp", +new Date());
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
         (d.head || d.body).appendChild(s);
-      };
-      const onScroll = () => {
-        const dom = document.querySelector('.disqus');
-        if (window.outerHeight + window.scrollY > dom.offsetTop) {
-          window.removeEventListener('scroll', onScroll);
-          loadDisqus();
-        }
       }
-      window.addEventListener('scroll', onScroll)
-    </script>
-  </div>
-</div>
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
 
 <% } %>
