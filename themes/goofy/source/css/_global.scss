@@ -22,12 +22,14 @@ body {
 .box {
   display: flex;
   justify-content: center;
-  & > div {
+  & > div,
+  & > section {
     max-width: 1000px;
     width: calc(100% - #{$padding * 2});
   }
   @media screen and (max-width: 600px) {
-    & > div {
+    & > div,
+    & > section {
       max-width: 100%;
       width: calc(100% - #{$padding * 2});
     }
