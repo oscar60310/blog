@@ -23,6 +23,11 @@
       background: rgba(204, 233, 255, 0.37);
       color: #2e87e7;
     }
+    &.selected {
+      border-color: #2e9fff;
+      background: rgba(204, 233, 255, 0.37);
+      color: #2e87e7;
+    }
   }
   img {
     height: 3em;
