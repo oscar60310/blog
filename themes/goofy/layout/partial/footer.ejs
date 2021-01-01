@@ -1,7 +1,9 @@
 <div class="footer box">
   <div>
     <div class="actions">
-      <span>© <%- moment().format('YYYY') %> <%- config.author %> - <a href="<%- url_for('about') %> ">About</a></span>
+      <span>© <%- moment().format('YYYY') %>
+          <%- config.author %> - <a href="<%- url_for('about') %> ">About</a>&nbsp;
+            <a target="_black" href="https://api.cptsai.com/auth/login">Login</a></span>
       <a class="material-icons rss" href="<%- url_for('feed.xml') %>" target="_blank">
         rss_feed
       </a>
