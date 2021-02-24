@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     Kubernetes 上的 ExternalTrafficPolicy |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2020/11/15/k8s-external-traffic-policy/" />
+  <meta property="og:site_name" content="Kubernetes 上的 ExternalTrafficPolicy" />
+  
+  <meta property="article:published_time" content="2020-11-15" />
+  
+  <meta name="description" content="在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式" />
+  <meta name="og:description" content="在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/2020/11/15/k8s-external-traffic-policy/og-cover.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2020/11/15/k8s-external-traffic-policy/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "f2cee4cc0863c19e31201e8148c027725174d8ced1b92cc50941ccb9e6d06876"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="Kubernetes 上的 ExternalTrafficPolicy">
+    <div class="post-description">
+      <h1>
+        Kubernetes 上的 ExternalTrafficPolicy
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 16 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/11/15 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/%E9%9B%B2%E7%AB%AF/ ">雲端</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Azure/ ">Azure</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/K8S/ ">K8S</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E9%95%B7%E7%AF%87/ ">長篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E9%80%B2%E9%9A%8E/ ">進階</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近公司改用 <a target="_blank" rel="noopener" href="https://kubernetes.github.io/ingress-nginx/">Nginx ingress controller</a> 配合一個 L4 Load Balancer 來處理進站流量，取代過去使用 <a target="_blank" rel="noopener" href="https://azure.microsoft.com/en-us/services/application-gateway/">Application Gateway</a>，在部屬時發現官方預設在 Service 上設定 ExternalTrafficPolicy = Local (<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.2/deploy/static/provider/cloud/deploy.yaml">Ingress-nginx Azure deploy.yaml</a>)，<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/aks/load-balancer-standard#maintain-the-clients-ip-on-inbound-connections">AKS 文件</a>上也提到如果想保留客戶端來源 IP 的話，必須要這樣設定。</p>
+<p>經果一番探索後，發現和 Kube-proxy 如何處理進進站流量有關，也算是解答了我對 Service 實作的問題，這篇文章來記錄一下研究成果 🎉</p>
+<h1 id="Kube-Proxy"><a href="#Kube-Proxy" class="headerlink" title="Kube Proxy"></a>Kube Proxy</h1><p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/overview/components/#kube-proxy">kube-proxy</a> 運行在每一個 Node 上，負責實作 Service，依照不同的 Mode 有不同的行為：</p>
+<p>在 Mode 為 iptables 設定下，Kube Proxy 會 Watch API Server 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是因為他只負責修改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。</p>
+<div class="msg-info">Kube-proxy 部分可以參考 <a target="_blank" rel="noopener" href='https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0#kube-proxy'>GKE</a> 的說明文件</div>
+
+<p>接下來我們來看看 kube-proxy 在不同型態的 Service 建立時會做哪些動作：</p>
+<h2 id="Cluster-IP"><a href="#Cluster-IP" class="headerlink" title="Cluster IP"></a>Cluster IP</h2><p>在 Service type = ClusterIP 時，內部可以藉由 Service DNS 或 IP 存取到對應的 Pod，例如：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> test
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> test
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> ClusterIP
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
+      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">8080</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<div class="mid"><img alt="cluster-ip-svc.png" style="" src="/2020/11/15/k8s-external-traffic-policy/cluster-ip-svc.png" /></div>
+
+<p>kube-proxy 會建立像這樣的 iptables：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">KUBE-SVC-IOIC7CRUMQYLZ32S  tcp  --  0.0.0.0/0            10.109.69.11         /* default/test: cluster IP */ tcp dpt:8080
+
+Chain KUBE-SVC-IOIC7CRUMQYLZ32S <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-SEP-DZ6OGOAFZ2YMFV35  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ statistic mode random probability 0.50000000000
+KUBE-SEP-PHU2ZXK3DXEO46Q2  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */
+
+Chain KUBE-SEP-DZ6OGOAFZ2YMFV35 <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.1.2           0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.1.2:8080
+
+Chain KUBE-SEP-PHU2ZXK3DXEO46Q2 <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.2.2           0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.2:8080<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>當我們從 Cluster 內部向 Service (10.109.69.11:8080) 發送資料時，會進入 KUBE-SVC-IOIC7CRUMQYLZ32S Chain ，接著有 50% 機率進 KUBE-SEP-DZ6OGOAFZ2YMFV35 和 KUBE-SEP-PHU2ZXK3DXEO46Q2 (假設後端有兩個 Pod) ，最後經由 DNAT 進入到真正的 Pod IP。</p>
+<p>這種狀況如果不是自己打自己的話就不會被標記為需要 SNAT，Application 端看到的就會是原始的 Pod IP，這種情況簡單很多。</p>
+<h2 id="由外部-NodePort-進入"><a href="#由外部-NodePort-進入" class="headerlink" title="由外部 NodePort 進入"></a>由外部 NodePort 進入</h2><p>這裡我們討論兩種 Policy，分別是 ExternalTrafficPolicy 為 Cluster (預設) 和 Local。</p>
+<p>假設我們有 3 個 Node (Node1, Node2, Node3) 和兩個 Pod (Pod1, Pod2)，Pod1 跑在 Node1、Pod2 跑在 Node2。</p>
+<h3 id="ExternalTrafficPolicy-Cluster"><a href="#ExternalTrafficPolicy-Cluster" class="headerlink" title="ExternalTrafficPolicy = Cluster"></a>ExternalTrafficPolicy = Cluster</h3><p>這是預設的 Policy，建立完成後我們可以從 NodePort 存取 Service：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> test
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> test
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort
+  <span class="token key atrule">externalTrafficPolicy</span><span class="token punctuation">:</span> Cluster
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
+      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">nodePort</span><span class="token punctuation">:</span> <span class="token number">30000</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<div class="mid"><img alt="node-port-cluster.png" style="" src="/2020/11/15/k8s-external-traffic-policy/node-port-cluster.png" /></div>
+
+<p>這時候我們可以從所有的 Node 上 Port 30000 和 Pod 溝通，就算 Pod 不是跑在該 Node 上也沒問題，我們先來看看 iptables：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">Chain KUBE-SERVICES <span class="token punctuation">(</span>2 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+KUBE-NODEPORTS  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes <span class="token function">service</span> nodeports<span class="token punctuation">;</span> NOTE: this must be the last rule <span class="token keyword">in</span> this chain */ ADDRTYPE match dst-type LOCAL
+
+Chain KUBE-NODEPORTS <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp dpt:30000
+KUBE-SVC-IOIC7CRUMQYLZ32S  tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp dpt:30000
+
+Chain KUBE-SVC-IOIC7CRUMQYLZ32S <span class="token punctuation">(</span>2 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-SEP-BO7YT2KMVIOH6WRF  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ statistic mode random probability 0.50000000000
+KUBE-SEP-QDGUX4VYGOYVANTA  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */
+
+Chain KUBE-SEP-BO7YT2KMVIOH6WRF <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.2.5           0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.5:8080
+
+Chain KUBE-SEP-QDGUX4VYGOYVANTA <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.2.6           0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.6:8080<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>前半段和 ClusterIP 很像，只不過多了一層 KUBE-NODEPORTS Chain，一樣做後會經由 DNAT 到 Pod。</p>
+<p>特別的是在 KUBE-NODEPORTS 中多了一個 KUBE-MARK-MASQ：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">Chain KUBE-MARK-MASQ <span class="token punctuation">(</span>15 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>最後在 POSTROUTING 階段，有 MARK 的會經由 MASQUERADE 模組修改來源 IP：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">Chain POSTROUTING <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */
+
+Chain KUBE-POSTROUTING <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes <span class="token function">service</span> traffic requiring SNAT */ mark match 0x4000/0x4000 random-fully<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，而不是原始的來源，文章後面會說明為什麼需要 SNAT。</p>
+<p>這個模式以圖解的方式大概會長這樣：</p>
+<div class="mid"><img alt="NodePort with ExternalTrafficPolicy = cluster" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/node-port-cluster.svg" /></div><p class="img-desc">NodePort with ExternalTrafficPolicy = cluster</p>
+
+<p>完整的 iptables 資料請見 <a href="./node-port-cluster-iptables-nat.txt">node-port-cluster-iptables-nat.txt</a>。</p>
+<h3 id="ExternalTrafficPolicy-Local"><a href="#ExternalTrafficPolicy-Local" class="headerlink" title="ExternalTrafficPolicy = Local"></a>ExternalTrafficPolicy = Local</h3><p>只要將 Service 的 externalTrafficPolicy 設定為 <code>Local</code> 即可，此時只能從有目標 Pod 的 Node 來存取 Service：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> test
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> test
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort
+  <span class="token key atrule">externalTrafficPolicy</span><span class="token punctuation">:</span> Local
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
+      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">nodePort</span><span class="token punctuation">:</span> <span class="token number">30000</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<div class="mid"><img alt="node-port-local.png" style="" src="/2020/11/15/k8s-external-traffic-policy/node-port-local.png" /></div>
+
+<p>這時候我們只能從 Node1 和 Node2 的 Port 30000 存取到 Pod，Node3 因為沒有 Pod 跑在上面，所以無法連線到 Pod。</p>
+<p>我們先來看看 Node1 (有 Pod) 的 iptables，差異只有在 KUBE-NODEPORTS Chain 之後：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">Chain KUBE-NODEPORTS <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  tcp  --  127.0.0.0/8          0.0.0.0/0            /* default/test: */ tcp dpt:30000
+KUBE-XLB-IOIC7CRUMQYLZ32S  tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp dpt:30000
+
+Chain KUBE-XLB-IOIC7CRUMQYLZ32S <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  10.244.0.0/16        0.0.0.0/0            /* Redirect pods trying to reach external loadbalancer VIP to clusterIP */
+KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            /* masquerade LOCAL traffic <span class="token keyword">for</span> default/test: LB IP */ ADDRTYPE match src-type LOCAL
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  0.0.0.0/0            0.0.0.0/0            /* route LOCAL traffic <span class="token keyword">for</span> default/test: LB IP to <span class="token function">service</span> chain */ ADDRTYPE match src-type LOCAL
+KUBE-SEP-SXLTLNYANJJ3YTT4  all  --  0.0.0.0/0            0.0.0.0/0            /* Balancing rule 0 <span class="token keyword">for</span> default/test: */
+
+Chain KUBE-SVC-IOIC7CRUMQYLZ32S <span class="token punctuation">(</span>3 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-SEP-TMQSCQKS6IHHXYVK  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ statistic mode random probability 0.50000000000
+KUBE-SEP-SXLTLNYANJJ3YTT4  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */
+
+Chain KUBE-SEP-SXLTLNYANJJ3YTT4 <span class="token punctuation">(</span>2 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.2.8           0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.8:8080
+
+Chain KUBE-SEP-TMQSCQKS6IHHXYVK <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-MARK-MASQ  all  --  10.244.1.10          0.0.0.0/0            /* default/test: */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.1.10:8080<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>當由 Node1 外部 30000 Port 進入時，會經過 </p>
+<ol>
+<li>KUBE-NODEPORTS</li>
+<li>KUBE-XLB-IOIC7CRUMQYLZ32S (line 4)</li>
+<li>KUBE-SEP-SXLTLNYANJJ3YTT4 (line 11)</li>
+</ol>
+<p>直接到 Pod IP，此時只有一個 Pod，另一個 Pod 因為跑在 Node2 的關係所以經由 Node1 是存取不到的。</p>
+<p>過程中不會被 MARK，也就不會有 SNAT 發生，Application 端看到的就會是原始的 IP 了，這也就是為什麼當想保留 Client 端 IP 時必須要設定為 Local 的原因。</p>
+<div class="msg-info">當從 Node1 內部打 Port 30000 時，會照正常的流程走，如同 Policy = Cluster 一樣</div>
+
+<p>在 Node3 中的 iptables 則會把外部 Port 30000 的所有封包丟棄，因為沒有 Pod 跑在該 Node，內部要求一樣不受影響。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">Chain KUBE-XLB-IOIC7CRUMQYLZ32S <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination         
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  10.244.0.0/16        0.0.0.0/0            /* Redirect pods trying to reach external loadbalancer VIP to clusterIP */
+KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            /* masquerade LOCAL traffic <span class="token keyword">for</span> default/test: LB IP */ ADDRTYPE match src-type LOCAL
+KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  0.0.0.0/0            0.0.0.0/0            /* route LOCAL traffic <span class="token keyword">for</span> default/test: LB IP to <span class="token function">service</span> chain */ ADDRTYPE match src-type LOCAL
+KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: has no local endpoints */<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>這個模式以圖解的方式大概會長這樣：</p>
+<div class="mid"><img alt="NodePort with ExternalTrafficPolicy = local" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/node-port-local.svg" /></div><p class="img-desc">NodePort with ExternalTrafficPolicy = local</p>
+
+<p>完整的 iptables 資料請見 <a href="./node-port-local-has-no-pod-iptables-nat.txt">node-port-local-has-no-pod-iptables-nat.txt</a> (Node3) 與  <a href="./node-port-local-has-pod-iptables-nat.txt">node-port-local-has-pod-iptables-nat.txt</a> (Node1)。</p>
+<h1 id="為什麼需要-SNAT"><a href="#為什麼需要-SNAT" class="headerlink" title="為什麼需要 SNAT"></a>為什麼需要 SNAT</h1><p>當設定 ExternalTrafficPolicy 為 Cluster 時，會在 Node 上經過一次的 SNAT 然後才到達 Pod，所以我們在 Pod 上看到的來源 IP 永遠會是 Node IP，那 Kube Proxy 為甚麼要這樣做呢，我們來看看如果沒有 NAT 的話會發生什麼事情，為了簡化我們把 Node2 移除，假設客戶端從 Node3 想要存取服務：</p>
+<div class="mid"><img alt="Routing without SNAT at arrival node" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/why-we-need-NAT-without-nat.svg" /></div><p class="img-desc">Routing without SNAT at arrival node</p>
+
+<ol>
+<li>首先 Client 向 Node3 (假設這個 Node 沒有 Pod 跑在上面) 發送要求。</li>
+<li>Node3 將封包轉向 Pod IP (只有 DNAT)。</li>
+<li>Pod 回應。</li>
+<li>Node1 將封包轉向 Client。</li>
+</ol>
+<p>這張圖可以很明顯的看出來，Client 向 Node3 發送要求，卻收到 Node1 的回應，在大多數情況這樣是行不通的，甚至在防火牆就會被擋掉。所以 Kube Proxy 才會讓 Pod 先回傳給原始的 Node，再由 Node 負責回應：</p>
+<div class="mid"><img alt="Routing with SNAT at arrival node" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/why-we-need-NAT-with-nat.svg" /></div><p class="img-desc">Routing with SNAT at arrival node</p>
+
+<p>雖然會產生額外的步驟，但也只有這樣能確保路由順暢。</p>
+<h1 id="Load-balancer"><a href="#Load-balancer" class="headerlink" title="Load balancer"></a>Load balancer</h1><p>那當 Service Type 為 LoadBalancer 時，雲端環境又是怎麼處理的呢？</p>
+<p>以 AKS (Azure) 為例，除了指定 NodePort 並將所有的 Node 加入 LB 的 Backend pools 之外，還會設定 <code>healthCheckNodePort</code>，這會讓 K8S 在這個 Port 上開啟額外的 Health Check EndPoint，我們可以透過這個 API 來檢查該 Node 是不是有目標 Pod 在執行，進而控制 LB 要不要把流量往這個 Node 送，這麼一來就可以避免像上圖 Node3 一樣，沒有 EndPoint 的情況發生了。</p>
+<div class="mid"><img alt="Azure LB health probes 設定" style="" src="/2020/11/15/k8s-external-traffic-policy/azure-lb-health-probes.png" /></div><p class="img-desc">Azure LB health probes 設定</p>
+
+<h1 id="不平衡問題"><a href="#不平衡問題" class="headerlink" title="不平衡問題"></a>不平衡問題</h1><p>最後我們來討論一下除了需要額外判斷 Node 狀態外，使用 Local Policy 會面臨的最大問題: <code>imbalance</code> 。一般來說我們的群集外部會有一個 Load Balancer 來將流量平均分配至所有的 Node 上，假設我們有兩個 Node (Node1, Node2)，總共執行三個 Pod，在 Node1 上有一個，在 Node2 則有兩個。</p>
+<p>當使用預設設定時，情況應該會如下圖：</p>
+<div class="mid"><img alt="Network weight in Cluster Policy" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/imbalance-issue-cluster.svg" /></div><p class="img-desc">Network weight in Cluster Policy</p>
+
+<p>最後每個 Pod 很平均的獲得 33% 的流量，那如果是 Local Policy 呢？</p>
+<div class="mid"><img alt="Network weight in Local Policy" style=" width:100%;" src="/2020/11/15/k8s-external-traffic-policy/imbalance-issue-local.svg" /></div><p class="img-desc">Network weight in Local Policy</p>
+
+<p>因為 LB 對每個 Node 的權重是一樣的，所以最後 Pod1 會有 50% 的流量，而其他兩個只會有 25%，這就是所謂的負載不平衡的問題。</p>
+<p>這個問題可以藉由 Pod Affinity 來解決，確保每個 Node 上 Pod 數量是相同的就可以了。</p>
+<h1 id="總結"><a href="#總結" class="headerlink" title="總結"></a>總結</h1><p>有關 External Traffic Policy 的探討就到這邊了，我也沒想到小小一個屬性牽涉到這麼複雜的問題，感謝前輩們的努力上我們只需要一行設定解決一切 💗</p>
+<p>若您對文章任何內容有疑慮歡迎在下方留言或直接在 Github 上開 Issue，非常感謝！</p>
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tutorials/services/source-ip/">Kubernetes - Using Source IP</a></li>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/">Kubernetes - Create an External Load Balancer</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.asykim.com/blog/deep-dive-into-kubernetes-external-traffic-policies">A Deep Dive into Kubernetes External Traffic Policies</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_36183935/article/details/90734847">kubernetes的Kube-proxy的iptables转发规则</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0">GKE - Network overview</a></li>
+</ul>
+<p>預覽圖 - Photo by <strong><a target="_blank" rel="noopener" href="https://www.pexels.com/@brett-sayles?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels">Brett Sayles</a></strong> from <strong><a target="_blank" rel="noopener" href="https://www.pexels.com/photo/routers-with-cables-2425567/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels">Pexels</a></strong></p>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2020/11/15 20:45
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/k8s-external-traffic-policy.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/3af112ef8f63dc6da7b063e83fea685a5c55bcd0" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/11/15 20:45 - update article release date</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/c47405d17b57ba9765e2ebf0c54358be0cf5d582" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/11/15 20:35 - release k8s external traffic policy</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2020/11/15/k8s-external-traffic-policy/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     使用 Node Js 讀取 DHT11 溫溼度感測器 |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2017/12/08/dht11/" />
+  <meta property="og:site_name" content="使用 Node Js 讀取 DHT11 溫溼度感測器" />
+  
+  <meta property="article:published_time" content="2017-12-08" />
+  
+  <meta name="description" content="使用 Node JS 來了解和 DHT11 感測器是如何溝通的。" />
+  <meta name="og:description" content="使用 Node JS 來了解和 DHT11 感測器是如何溝通的。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2017/12/08/dht11/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "467b799d07e9a8557a3444c717f461ce2c46a3678339970ea8e43fb83667a277"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="使用 Node Js 讀取 DHT11 溫溼度感測器">
+    <div class="post-description">
+      <h1>
+        使用 Node Js 讀取 DHT11 溫溼度感測器
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 5 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2017/12/8 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/iot/ ">iot</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E6%A8%B9%E8%8E%93%E6%B4%BE/ ">樹莓派</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E4%B8%AD%E7%AF%87/ ">中篇</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>剛入門單晶片時，讀取溫度感測器是很多新手第一個實作目標，網路上也有很多 <a target="_blank" rel="noopener" href="https://github.com/adafruit/DHT-sensor-library">Library</a> 可以直接使用。也因為如此，我一直沒弄清楚單晶片和感測器是如何溝通的，這幾天剛好想使用 Node Js 來接，稱這個機會好好了解通訊原理吧！</p>
+<a id="more"></a>
+
+<h2 id="基本資訊"><a href="#基本資訊" class="headerlink" title="基本資訊"></a>基本資訊</h2><p>會挑選 DHT11 來深入研究是因為他是個很多人在使用的模組，規格書也相對完整許多，很適合新手閱讀 XD，這篇文章會以 <a target="_blank" rel="noopener" href="http://www.micropik.com/PDF/dht11.pdf">這份</a> 規格書來講解。</p>
+<div class="mid"><img alt="圖片來自 http://www.micropik.com/PDF/dht11.pdf" style="" src="/2017/12/08/dht11/basic.png" /></div><p class="img-desc">圖片來自 http://www.micropik.com/PDF/dht11.pdf</p>
+
+<p>DHT11 的 1、4 號角位分別接上 VDD 和接地，2 號腳位是和 MCU 通訊用的雙向傳輸通道，3 號角位是沒有用處的。</p>
+<h2 id="資料格式"><a href="#資料格式" class="headerlink" title="資料格式"></a>資料格式</h2><p>一次的資料傳輸會有 <code>40bit</code> 的資料，依照順序分別代表：</p>
+<div class="mid"><img alt="資料圖示" style=" width:100%;" src="/2017/12/08/dht11/code.svg" /></div><p class="img-desc">資料圖示</p>
+
+<p>這個範例代表的是<br>濕度 00110101 = 53 %<br>溫度 00011000 = 24 度 C<br>檢查碼是用來確定傳輸資料正確性的，他應該要等於前面資料相加取後 8bit，例如上面範例 00110101 + 00011000 = 01001101 (符合)</p>
+<blockquote>
+<p>當檢查碼不符合時，我們應該放棄本次傳輸的資料，再要求一次</p>
+</blockquote>
+<h2 id="要求資料"><a href="#要求資料" class="headerlink" title="要求資料"></a>要求資料</h2><p>DHT11 沒事不會一直送資料，所以只接受腳位的輸入是沒辦法拿資料的，我們必須傳送一個 <code>起始訊號</code> 給 DHT11，當他接受到訊號時，便會由低功耗模式轉為運作模式，訊號結束後就會回應資料給 MCU，整個傳輸流程如下</p>
+<div class="mid"><img alt="傳輸流程圖" style=" width:100%;" src="/2017/12/08/dht11/trans.svg" /></div><p class="img-desc">傳輸流程圖</p>
+
+<p>最前面的訊號事就是起始訊號，是由 MCU 發出的，將原本的高電位拉低大約 18 ms 後回到高電位，接著把控制權交給 DHT11，使用 <a target="_blank" rel="noopener" href="https://github.com/jperkin/node-rpio">RPIO</a> 程式可以這麼寫：</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token comment" spellcheck="true">// 輸出模式</span>
+rpio<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> rpio<span class="token punctuation">.</span>OUTPUT<span class="token punctuation">)</span><span class="token punctuation">;</span>
+先回復成高電位<span class="token punctuation">;</span>
+rpio<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> rpio<span class="token punctuation">.</span>HIGH<span class="token punctuation">)</span><span class="token punctuation">;</span>
+rpio<span class="token punctuation">.</span><span class="token function">msleep</span><span class="token punctuation">(</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 拉低</span>
+rpio<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> rpio<span class="token punctuation">.</span>LOW<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 經過特定時間 (這裡應該要是 18ms，但 JS 實際會有延遲，得時測之後才在修改這個值)</span>
+rpio<span class="token punctuation">.</span><span class="token function">msleep</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 回復成高電位</span>
+rpio<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> rpio<span class="token punctuation">.</span>HIGH<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// MCU 轉為輸入模式，接聽 DHT11 的回應</span>
+rpio<span class="token punctuation">.</span><span class="token function">mode</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> rpio<span class="token punctuation">.</span>INPUT<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>到這裡我們就完成起始訊號的發送了，接下來是接受回應訊號和資料的部分，為了避免 JS 延遲，會使用 <code>readBuf</code> 這個方法來取代由 JS 不斷的讀取資料。</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token keyword">const</span> buf <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Buffer</span><span class="token punctuation">(</span><span class="token number">100000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+rpio<span class="token punctuation">.</span><span class="token function">readbuf</span><span class="token punctuation">(</span>pin<span class="token punctuation">,</span> buf<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<blockquote>
+<p>Buffer 大小只需要能完整接受接下來的訊號就好</p>
+</blockquote>
+<h2 id="解析回應"><a href="#解析回應" class="headerlink" title="解析回應"></a>解析回應</h2><p>Buffer 拿到的結果長這個樣子</p>
+<div class="mid"><img alt="full" style="" src="/2017/12/08/dht11/raw-1.svg" /></div><p class="img-desc">full</p>
+<p>中間的部分就是資料的回應，由於每次讀取的速度都不太一樣，所以我的 Buffer 取得比較大一些。把中間部分訊號放大來看的話</p>
+<div class="mid"><img alt="full" style="" src="/2017/12/08/dht11/sig2.svg" /></div><p class="img-desc">full</p>
+<p>前後為起始、結束訊號，中間資料部分每個拉底拉高為一個 bit，低電位的時間都為 50 us，高電位時間 26us 代表 bit 0，70 us 代表 bit 1，如下面這張圖</p>
+<div class="mid"><img alt="full" style="" src="/2017/12/08/dht11/bit.svg" /></div><p class="img-desc">full</p>
+<p>試著把所有訊號分割來看</p>
+<div class="mid"><img alt="full" style="" src="/2017/12/08/dht11/decode.svg" /></div><p class="img-desc">full</p>
+<p>得到<br>00101110 = 46 (濕度)<br>00000000<br>00011001 = 25 (溫度)<br>00000000<br>01000111 = 71 (檢查 46 + 25 = 71)<br>我們雖然不能確定訊號持續多久，但能利用訊號取樣的長度來做簡單的判斷，當高電位長度大於低電位時為 1 ，反之則為 0。</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token keyword">let</span> last <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token keyword">let</span> count <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token keyword">let</span> start <span class="token operator">=</span> <span class="token number">3</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 略過前三個變化</span>
+<span class="token keyword">let</span> data <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> b <span class="token keyword">of</span> buf<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>last <span class="token operator">===</span> b<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    count<span class="token operator">++</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>start <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      start<span class="token operator">--</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      data<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+        level<span class="token punctuation">:</span> last<span class="token punctuation">,</span>
+        len<span class="token punctuation">:</span> count
+      <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    last <span class="token operator">=</span> b<span class="token punctuation">;</span>
+    count <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span>data<span class="token punctuation">.</span>length <span class="token operator">></span> <span class="token number">80</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> trea <span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len<span class="token punctuation">;</span>
+  <span class="token keyword">let</span> hi <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">8</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    hi <span class="token operator">+</span><span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">2</span> <span class="token operator">*</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len <span class="token operator">></span> trea <span class="token operator">?</span> <span class="token string">"1"</span> <span class="token punctuation">:</span> <span class="token string">"0"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">let</span> hd <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">8</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">16</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    hd <span class="token operator">+</span><span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">2</span> <span class="token operator">*</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len <span class="token operator">></span> trea <span class="token operator">?</span> <span class="token string">"1"</span> <span class="token punctuation">:</span> <span class="token string">"0"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">let</span> ti <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">16</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">24</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    ti <span class="token operator">+</span><span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">2</span> <span class="token operator">*</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len <span class="token operator">></span> trea <span class="token operator">?</span> <span class="token string">"1"</span> <span class="token punctuation">:</span> <span class="token string">"0"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">let</span> td <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">24</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">32</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    td <span class="token operator">+</span><span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">2</span> <span class="token operator">*</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len <span class="token operator">></span> trea <span class="token operator">?</span> <span class="token string">"1"</span> <span class="token punctuation">:</span> <span class="token string">"0"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">let</span> ck <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">32</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">40</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    ck <span class="token operator">+</span><span class="token operator">=</span> data<span class="token punctuation">[</span><span class="token number">2</span> <span class="token operator">*</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>len <span class="token operator">></span> trea <span class="token operator">?</span> <span class="token string">"1"</span> <span class="token punctuation">:</span> <span class="token string">"0"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">const</span> deg <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>ti<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 溫度整數</span>
+  <span class="token keyword">const</span> hum <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>hi<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 濕度整數</span>
+  <span class="token keyword">const</span> degdot <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>td<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 溫度小數</span>
+  <span class="token keyword">const</span> humdot <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>hd<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 濕度小數</span>
+
+  <span class="token keyword">const</span> check <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>ck<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>deg <span class="token operator">+</span> hum <span class="token operator">+</span> degdot <span class="token operator">+</span> humdot <span class="token operator">===</span> check<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>到這裡就可以取得 DHT11 的溫溼度囉，有任何問題歡迎聯絡我！</p>
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ul>
+<li><a target="_blank" rel="noopener" href="http://www.micropik.com/PDF/dht11.pdf">DHT11 DataSheet</a></li>
+<li><a target="_blank" rel="noopener" href="http://wiki.seeedstudio.com/images/3/31/DHT11.pdf">DHT11 DataSheet 2</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2017/12/08 10:48
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/dht11.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/667621bfb6f59b4e57cb02d0ed050206f2d10f3e" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/05/21 19:17 - fix image width</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/ccff1e1614909feec6b4b9135c2caaaabe4b1dd7" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/22 00:26 - fix image alt</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/f3fae91ed47e194631976ffd22e9f21aca78c741" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/07 00:22 - add description</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/87b72a141f39bd640a95e185c83cd5c312bc08d3" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/07 00:13 - add tags</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/bd15b0ca2c034abe5e69c20c9a634cf4b0ce3dac" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/05 01:44 - remove prefix naming</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2017/12/08/dht11/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     Kubernetes 上的保留資源 |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2020/08/22/k8s-reserved-resources/" />
+  <meta property="og:site_name" content="Kubernetes 上的保留資源" />
+  
+  <meta property="article:published_time" content="2020-08-22" />
+  
+  <meta name="description" content="最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod 很容易被驅逐，查了一下才發現原來我們不能用盡 Node 上的所有資源，這篇文章就來看看我們必須留下多少資源給系統吧。" />
+  <meta name="og:description" content="最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod 很容易被驅逐，查了一下才發現原來我們不能用盡 Node 上的所有資源，這篇文章就來看看我們必須留下多少資源給系統吧。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2020/08/22/k8s-reserved-resources/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "865e31521e382b139d91653615708c408c9daea8e4790ea8964643015a4147af"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="Kubernetes 上的保留資源">
+    <div class="post-description">
+      <h1>
+        Kubernetes 上的保留資源
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 3 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/8/22 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/%E9%9B%B2%E7%AB%AF/ ">雲端</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E7%9F%AD%E7%AF%87/ ">短篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Azure/ ">Azure</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/K8S/ ">K8S</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/AWS/ ">AWS</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <p>最近發現我們在 Azure Kubernetes Service (AKS) 上的 Pod 很容易被驅逐，查了一下才發現原來我們不能用盡 Node 上的所有資源，這篇文章就來看看我們必須留下多少資源給系統吧。</p>
+<h1 id="Node-Capacity"><a href="#Node-Capacity" class="headerlink" title="Node Capacity"></a>Node Capacity</h1><p>在 Kubernetes 上執行 Pod 的時候，我們可以指定 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Resource Request/Limit</a> 來告訴 K8S 我們的程式需要多少的資源來運行，K8S 會自動幫我們安排到符合條件的節點上，像下面這樣：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">resources</span><span class="token punctuation">:</span>
+  <span class="token key atrule">requests</span><span class="token punctuation">:</span>
+    <span class="token key atrule">memory</span><span class="token punctuation">:</span> <span class="token string">"64Mi"</span>
+    <span class="token key atrule">cpu</span><span class="token punctuation">:</span> <span class="token string">"250m"</span>
+  <span class="token key atrule">limits</span><span class="token punctuation">:</span>
+    <span class="token key atrule">memory</span><span class="token punctuation">:</span> <span class="token string">"128Mi"</span>
+    <span class="token key atrule">cpu</span><span class="token punctuation">:</span> <span class="token string">"500m"</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>一個節點的資源量是固定的，稱為 Node Capacity，例如在 AWS 上開 t3.medium 等級的 Node，就會有差不多 4GiB 的記憶體可以使用。但在機器上其實還會有一些不受群集控制的程式在運作 (例如 OS 程式、Kubernetes 本人等等)，這時候如果還是按照 Capacity 去分配的話，就可能會發生問題，所以 K8S 提供了 Node Allocatable 這個功能。</p>
+<h1 id="Node-Allocatable"><a href="#Node-Allocatable" class="headerlink" title="Node Allocatable"></a>Node Allocatable</h1><p>我們可以使用 <code>kubectl describe node</code> 來查看 Node 的 Capacity 和 Allocatable</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">Capacity</span><span class="token punctuation">:</span>
+  <span class="token key atrule">cpu</span><span class="token punctuation">:</span>                <span class="token number">8</span>
+  <span class="token key atrule">ephemeral-storage</span><span class="token punctuation">:</span>  9765628Ki
+  <span class="token key atrule">hugepages-1Gi</span><span class="token punctuation">:</span>      <span class="token number">0</span>
+  <span class="token key atrule">hugepages-2Mi</span><span class="token punctuation">:</span>      <span class="token number">0</span>
+  <span class="token key atrule">memory</span><span class="token punctuation">:</span>             32930000Ki
+  <span class="token key atrule">pods</span><span class="token punctuation">:</span>               <span class="token number">110</span>
+<span class="token key atrule">Allocatable</span><span class="token punctuation">:</span>
+  <span class="token key atrule">cpu</span><span class="token punctuation">:</span>                <span class="token number">8</span>
+  <span class="token key atrule">ephemeral-storage</span><span class="token punctuation">:</span>  <span class="token number">9000002750</span>
+  <span class="token key atrule">hugepages-1Gi</span><span class="token punctuation">:</span>      <span class="token number">0</span>
+  <span class="token key atrule">hugepages-2Mi</span><span class="token punctuation">:</span>      <span class="token number">0</span>
+  <span class="token key atrule">memory</span><span class="token punctuation">:</span>             32827600Ki
+  <span class="token key atrule">pods</span><span class="token punctuation">:</span>               <span class="token number">110</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>上面的測試環境中大約有 100 MB 的記憶體被保留起來，這個數值在雲端服務中例如 AKS / EKS  會更大，在文章末會說明，我們先來看看 Allocatable 是怎麼計算出來的。</p>
+<pre class="line-numbers language-txt"><code class="language-txt">      Node Capacity
+---------------------------
+|     kube-reserved       |
+|-------------------------|
+|     system-reserved     |
+|-------------------------|
+|    eviction-threshold   |
+|-------------------------|
+|                         |
+|      allocatable        |
+|   (available for pods)  |
+|                         |
+|                         |
+---------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>這個來自官網的圖示可以發現 Allocatable 其實是 Capacity 扣除 reserved resource 和 eviction threshold 出來的，我們來一一介紹他們，其實比較會出問題的是記憶體的部分，所以下方都會以記憶體來討論，但其他資源 (CPU, storage, pid 等等)也都有對應的保留設定。</p>
+<h2 id="Kube-System-Reserved"><a href="#Kube-System-Reserved" class="headerlink" title="Kube/System Reserved"></a>Kube/System Reserved</h2><p>這兩個著值代表的是預留給 Kubernetes 和 OS 程式的資源，可以使用 <code>--kube-reserved</code> 和 <code>--system-reserved</code> 來覆寫，通常 system reserved 不會變動，kube reserved 則會根據 Node 上可以跑的 Pod 數量來決定。</p>
+<p>在 Azure (AKS) 上，kube reserved memory 是根據 Node capacity 來決定的，計算方式如下：</p>
+<ul>
+<li>25% of the first 4 GB of memory</li>
+<li>20% of the next 4 GB of memory (up to 8 GB)</li>
+<li>10% of the next 8 GB of memory (up to 16 GB)</li>
+<li>6% of the next 112 GB of memory (up to 128 GB)</li>
+<li>2% of any memory above 128 GB</li>
+</ul>
+<p>例如 7 GB 的機器就會有 (0.25 x 4) + (0.20 x 3) = 1.6 GB 的資源被保留，可以參考<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads#resource-reservations">官方文件</a>。</p>
+<p>在 AWS (EKS) 上，則是根據 Max Pod 來決定</p>
+<pre class="line-numbers language-sh"><code class="language-sh">memory_to_reserve=$((11 * $max_num_pods + 255))<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>例如 t3.medium 可以跑 17 個 pod，就會有 17 * 11 + 255 = 442 MB 的資源被保留，可以參考 EKS AMI Image 的 <a target="_blank" rel="noopener" href="https://github.com/awslabs/amazon-eks-ami/blob/v20200723/files/bootstrap.sh#L167">bootstrap script</a>。</p>
+<h2 id="Eviction-Threshold"><a href="#Eviction-Threshold" class="headerlink" title="Eviction Threshold"></a>Eviction Threshold</h2><p>這個設定就很有趣了，當 Node 上可以使用的資源 (Capacity - reserved - 已經被使用的資源) 小於這個數值時，kubelet 就會開始驅逐 (Evict) Pod，直到資源回復到正常數值為止，來避免 Node 遭到破壞(例如 k8s 系統沒有足夠的資源，造成 Node 離線等等)。</p>
+<p>在 AWS 上，這個值固定為 <code>100MB</code> ，可以參考 EKS AMI Image 的 <a target="_blank" rel="noopener" href="https://github.com/awslabs/amazon-eks-ami/blob/v20200723/files/bootstrap.sh#L301">bootstrap script</a>。</p>
+<p>在 Azure 上，這個值固定為 <code>750MB</code>，可以參考<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads#resource-reservations">官方文件</a>。</p>
+<h1 id="雲端服務遇到的問題"><a href="#雲端服務遇到的問題" class="headerlink" title="雲端服務遇到的問題"></a>雲端服務遇到的問題</h1><p>如果是自己建立的 K8S Cluster ，上面提到的設定都可以自己控制，但雲端服務提供的 Kubernetes Service 就不是這麼好調整了。</p>
+<p>其實會讓我注意到 Node Allocatable 的原因是我們在 Azure 上發現 Pod 很容易被驅逐，仔細查看才發現原來系統必須保留這麼多的資源，以 DS2 v2 的機器來說，原本可用的記憶體為 7GiB，但仔細算一算保留資源</p>
+<pre class="line-numbers language-txt"><code class="language-txt">0.75 + (0.25*4) + (0.20*3) = 0.75GB + 1GB + 0.6GB = 2.35GB / 7GB = 33.57% reserved<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>1/3 的記憶體必須給系統保留 😂</p>
+<p>這個問題官方有說明原因以及暫時的解決辦法 (<a target="_blank" rel="noopener" href="https://github.com/Azure/AKS/issues/1216">AKS Github</a>)，不過到目前為止其實沒有正規的手法來調整。</p>
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Kubernetes document - Reserve Compute Resources for System Daemons</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Azure/AKS/issues/1216">AKS Github Issue #1216</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/awslabs/amazon-eks-ami/">EKS AMI Github</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2020/08/22 21:20
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/k8s-reserved-resources.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/86054dbbeb06fbcdadbee01c3006c690c303658a" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/08/23 02:00 - release Kubernetes reserved resources</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2020/08/22/k8s-reserved-resources/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

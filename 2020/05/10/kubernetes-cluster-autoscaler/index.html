@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     Kubernetes cluster autoscaler 介紹 |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2020/05/10/kubernetes-cluster-autoscaler/" />
+  <meta property="og:site_name" content="Kubernetes cluster autoscaler 介紹" />
+  
+  <meta property="article:published_time" content="2020-05-10" />
+  
+  <meta name="description" content="在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。" />
+  <meta name="og:description" content="在一般的開發我們很少會處理到群集的伸縮，整個產品中可能就會研究一次，所以我稱這次工作上難得處理到 K8S Cluster autoscaler，趕快記錄下來，也和大家分享。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2020/05/10/kubernetes-cluster-autoscaler/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "171ea7f87ecedc0e1a2baa76f9bc549f9be142e2a82ebbafaa0508eaf2ceca5c"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="Kubernetes cluster autoscaler 介紹">
+    <div class="post-description">
+      <h1>
+        Kubernetes cluster autoscaler 介紹
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 9 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/5/10 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/%E9%9B%B2%E7%AB%AF/ ">雲端</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Azure/ ">Azure</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E4%B8%AD%E7%AF%87/ ">中篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/K8S/ ">K8S</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/AWS/ ">AWS</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/CA/ ">CA</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <h1 id="甚麼是-Cluster-Autoscaler-CA"><a href="#甚麼是-Cluster-Autoscaler-CA" class="headerlink" title="甚麼是 Cluster Autoscaler (CA)"></a>甚麼是 Cluster Autoscaler (CA)</h1><p>Cluster Autoscaler (以下簡稱 CA) 是 Kubernetes 官方出的一個工具，讓你的 Cluster 依照需求伸縮，簡單來說就是幫你開/關雲端上的機器。通常會配合上 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/">Horizontal Pod Autoscaler</a> (以下簡稱 HPA) 一起使用，當 Pod 記憶體/CPU 或其他指標達到一定標準後，擴展 Pod，當沒有足夠的機器 (Node) 來執行 Pod 時，CA 就會幫你擴展機器。相反的需求下降時，HPA 降低 Pod 數量，CA 也會關閉不需要的機器，如此一來就可以節省成本又可以達到同樣的運算能力。</p>
+<h2 id="HPA"><a href="#HPA" class="headerlink" title="HPA"></a>HPA</h2><p>HPA 是 K8S 內建的元件，他監測 Deployment (或 Replication controller 等等) 中資源的使用量，當使用量超過一定標準時 (由使用者定義)，增加 Pod，反之移除不必要的 Pod。</p>
+<p>HPA 只會調整 Pod 的數量，他並不會處理群集資源不足的問題，此時就需要 CA 來調整群集大小。</p>
+<h2 id="擴展原理"><a href="#擴展原理" class="headerlink" title="擴展原理"></a>擴展原理</h2><p>CA 其實就是個由 Go 寫成的程式，一樣需要自己部屬在群集中，通常會使用 deployment 並盡可能確保這個程式順上運行，有些雲端方案會將 CA 內建在其中，像是 AKS。</p>
+<p>CA 會在兩個時候嘗試調整群集大小：</p>
+<ul>
+<li>有 Pod 因為資源不足的關係沒辦法執行。</li>
+<li>有 Node 使用量不足而且上面跑的 Pod 是可以被移動到其他地方的。</li>
+</ul>
+<p>當需要放大群集時，他調整機器需求量，讓雲端供應商安排機器，當需要關閉機器時，讓 K8S 驅逐在機器上的 Pod，好讓機器可以安心地關閉，讓我們來看看到底是如何做到的吧！</p>
+<h3 id="Scale-Up"><a href="#Scale-Up" class="headerlink" title="Scale Up"></a>Scale Up</h3><p>每隔 10 秒 (這個時間可以由 <code>--scan-interval</code> flag 來調整) ，CA 會去群集看看 Pod 們的狀態，每當 K8S 沒有辦法將 Pod 順利安排執行環境的時候，會將其狀態設定為 <code>schedulable = false</code>，CA 就是在找有沒有這樣的 Pod 存在。</p>
+<div class="mid"><img alt="Scale up 示意圖" style=" width:100%;" src="/2020/05/10/kubernetes-cluster-autoscaler/ca-scale-up.svg" /></div><p class="img-desc">Scale up 示意圖</p>
+
+<p>找到以後 CA 會看看自己的 Node Group (相同機器的組合，我們可以設定想要的數量和設定，雲端負責準備好這些機器，像是 AWS 中的 Auto scale group，Azure 中的 VMSS)，看有沒有可以放大而且放大以後這個 Pod 可以跑在上面的 (有沒有滿足資源要求、Node Selector) ，有的話就調整 Node Group 大小，並等待機器啟動且加入群集，等 15 分鐘 (這就需要看雲端而定了，通常 3 到 5 分鐘就可以準備完成)，讓 K8S 重新安排這個 Pod 執行。 </p>
+<h3 id="Scale-Down"><a href="#Scale-Down" class="headerlink" title="Scale Down"></a>Scale Down</h3><p>在沒有 scale up 的需求後，CA 會檢查有沒有機會 scale down。當一個 Node 的使用量低於 50% 時 ( CPU 和 Memory )，而且上面的 Pod 們可以被移出，有其他地方適合執行，沒有禁止驅逐，這個 Node 就會被 CA 視為沒有用的 Node，10 分鐘後 CA 會開始把 Node 關閉。</p>
+<p>CA 關閉 Node 的方式也很有趣，他會把 Pod 驅逐到別的 Node 上，並在 Node 上加上 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/#taint-based-evictions">Taint</a>，防止 K8S 再把 Pod 排回去。驅逐 Pod 後刪除 Node 的方式就因雲端平台而異了，這部分屬於 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/architecture/cloud-controller/#node-controller">Node Controller</a> 的工作。</p>
+<div class="mid"><img alt="Scale down 示意圖" style=" width:100%;" src="/2020/05/10/kubernetes-cluster-autoscaler/ca-scale-down.svg" /></div><p class="img-desc">Scale down 示意圖</p>
+
+<p>CA 會視情況決定關閉機器的順序以及數量，他會防止同一個時間驅逐過多的 Pod 造成系統不穩定，所以通常會是一台一台關閉，等待系統穩定後再接著判定 Scale Down 條件。</p>
+<h1 id="與雲端整合"><a href="#與雲端整合" class="headerlink" title="與雲端整合"></a>與雲端整合</h1><p>會用到 CA 通常都是在雲端環境，畢竟地端要動態擴展機器不太容易，CA 原本是設計給 GCP 上的 K8S 使用的，現在也已經支援各大平台，像是 Azure、AWS、AliCloud 等等，詳細的支援資料可以查看 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#deployment">Github - kubernetes/autoscaler</a>。這裡我簡單介紹自己有部屬過兩個平台部屬上需要注意的地方：</p>
+<h2 id="AWS"><a href="#AWS" class="headerlink" title="AWS"></a>AWS</h2><p><a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md">說明文件</a></p>
+<h3 id="權限設定"><a href="#權限設定" class="headerlink" title="權限設定"></a>權限設定</h3><p>在 AWS 上 CA 是和 <a target="_blank" rel="noopener" href="https://docs.aws.amazon.com/zh_tw/autoscaling/ec2/userguide/create-asg-from-instance.html">Auto Scaling Groups</a> (以下簡稱 ASG) 配合使用的，建立好 ASG 或使用 <a target="_blank" rel="noopener" href="https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html">Managed node groups</a> (同樣會產生 ASG，1.14 版本後支援) 後，我們需要給 CA 開一個 IAM Role，並且有這些權限：</p>
+<pre class="line-numbers language-json"><code class="language-json"><span class="token punctuation">{</span>
+    <span class="token property">"Version"</span><span class="token operator">:</span> <span class="token string">"2012-10-17"</span><span class="token punctuation">,</span>
+    <span class="token property">"Statement"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token punctuation">{</span>
+            <span class="token property">"Effect"</span><span class="token operator">:</span> <span class="token string">"Allow"</span><span class="token punctuation">,</span>
+            <span class="token property">"Action"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token string">"autoscaling:DescribeAutoScalingGroups"</span><span class="token punctuation">,</span>
+                <span class="token string">"autoscaling:DescribeAutoScalingInstances"</span><span class="token punctuation">,</span>
+                <span class="token string">"autoscaling:DescribeLaunchConfigurations"</span><span class="token punctuation">,</span>
+                <span class="token string">"autoscaling:SetDesiredCapacity"</span><span class="token punctuation">,</span>
+                <span class="token string">"autoscaling:TerminateInstanceInAutoScalingGroup"</span>
+            <span class="token punctuation">]</span><span class="token punctuation">,</span>
+            <span class="token property">"Resource"</span><span class="token operator">:</span> <span class="token string">"*"</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">]</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>如果妳的 ASG 有可能需要由 0 個 Node 啟動的話，還需要 <code>autoscaling:DescribeLaunchConfigurations</code> 或 <code>ec2:DescribeLaunchTemplateVersions</code> 權限，看你的 ASG 使用的是哪一種。因為沒有 Node 時，CA 必須要看 ASG 的設定來推估這個 ASG 會開啟哪一種 VM。</p>
+<p>至於要怎麼把權限給 CA 這裡就不多做敘述了，官方的建議作法是使用 <a target="_blank" rel="noopener" href="https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html">IAM Roles for service accounts</a> ，CA 也接受直接傳入 Access ID 和 KEY。</p>
+<h3 id="註冊-ASG"><a href="#註冊-ASG" class="headerlink" title="註冊 ASG"></a>註冊 ASG</h3><p>權限設定好後接下來就比較簡單了，你可以和 CA 說 ASG 名稱、最小和最大的 Node 數量，CA 會自己判斷什麼時候要調整哪一個 ASG，設定檔案會像這樣 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-multi-asg.yaml">cluster-autoscaler-multi-asg.yaml</a></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">command</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> ./cluster<span class="token punctuation">-</span>autoscaler
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>v=4
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>stderrthreshold=info
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>cloud<span class="token punctuation">-</span>provider=aws
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>skip<span class="token punctuation">-</span>nodes<span class="token punctuation">-</span>with<span class="token punctuation">-</span>local<span class="token punctuation">-</span>storage=false
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>expander=least<span class="token punctuation">-</span>waste
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>nodes=2<span class="token punctuation">:</span>10<span class="token punctuation">:</span>k8s<span class="token punctuation">-</span>worker<span class="token punctuation">-</span>asg<span class="token punctuation">-</span><span class="token number">1</span>
+  <span class="token punctuation">-</span> <span class="token punctuation">-</span><span class="token punctuation">-</span>nodes=1<span class="token punctuation">:</span>3<span class="token punctuation">:</span>k8s<span class="token punctuation">-</span>worker<span class="token punctuation">-</span>asg<span class="token punctuation">-</span><span class="token number">2</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>需要比較注意的是 CA 不會調整 ASG 的 min/max 數量，所以這裡定義的最大最小值不可以超過 ASG 上設定的，建議可以用 <a href="#Auto-Discovery">Auto Discovery</a> 來自動偵測，CA 會自動使用 ASG 上的 min/max 來當作最大最小值。</p>
+<div class="mid"><img alt="AWS ASG 設定畫面" style=" width:100%;" src="/2020/05/10/kubernetes-cluster-autoscaler/asg.png" /></div><p class="img-desc">AWS ASG 設定畫面</p>
+
+<h3 id="多個-ASG"><a href="#多個-ASG" class="headerlink" title="多個 ASG"></a>多個 ASG</h3><p>CA 是支援多個 ASG 的，你可以用 node-selector 等方式來限定 Pod 要跑在哪種機器，CA 會知道需要調整哪一個 ASG，你也可以在同一個 ASG 中設定不同類型的 VM (<a target="_blank" rel="noopener" href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-autoscaling-autoscalinggroup-mixedinstancespolicy.html">MixedInstancesPolicy</a>)，不過有個基本的原則：同一個 ASG 裡面的機器必須有相同的運算資源 ( 比如說  r5.2xlarge 和  r5a.2xlarge 有相同的 CPU 和 Memory )。</p>
+<h2 id="Azure"><a href="#Azure" class="headerlink" title="Azure"></a>Azure</h2><p><a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure">說明文件</a></p>
+<p>相比 AWS，Azure 的部屬比較容易，但也有些額外的限制。</p>
+<p>Azure 的部屬分成三種 VMSS, Standard 以及 AKS，這裡會介紹兩種方式</p>
+<h3 id="使用-AKS"><a href="#使用-AKS" class="headerlink" title="使用 AKS"></a>使用 AKS</h3><p>首先來說 AKS 部屬，AKS 已經幫你把 CA 內建了，在建立 AKS 的時候加上這些參數就好</p>
+<pre class="line-numbers language-bash"><code class="language-bash">az aks create \
+--enable-cluster-autoscaler \
+--min-count 1 \
+--max-count 3<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>當然你也可以針對每個 Node Pool 設定 CA，請見 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler">Azure document: Automatically scale a cluster to meet application demands on Azure Kubernetes Service (AKS)</a>。</p>
+<p>這種方法非常簡單，你不需要擔心 CA 執行的問題，權限也設定好了，但有幾個個人認為很致命的缺點：</p>
+<ul>
+<li>目前還不支援 Scale to/from zero，也就是說每一個 Node Pool 都會最少有一個 node 在運作，即使我們根本不需要。(未來會支援 <a target="_blank" rel="noopener" href="https://github.com/Azure/AKS/issues/1565">Github AKS Issue #1565</a>)</li>
+<li>CA 不受到你直接控制，需要改 CA 設定比必須藉由更新 AKS，也看不到 CA 的 Log ，增加 Debug 難度。</li>
+</ul>
+<h3 id="使用-VMSS"><a href="#使用-VMSS" class="headerlink" title="使用 VMSS"></a>使用 VMSS</h3><p>另一種方法就是直接對 Virtual Machine Scale Set ( 類似 ASG ，以下簡稱 VMSS ) 操作，不透過 AKS。部屬方法和 AWS 上差不多，一樣可以直接和 CA 說 VMSS 名稱或者使用 <a href="#Auto-Discovery">Auto Discovery</a> 自動偵測，不過 VMSS 本身並沒有 min/max 的設定，必須要藉由 <code>min</code> 和 <code>max</code> 這兩個 tag 來告訴 CA 最大最小值。這和 AWS 運行原理不同，CA 是「有權限」把 VMSS 數量設定到界線之外的 (但他應該不會這麼做)。</p>
+<p>至於權限設定和 AWS 很類似，你可以使用像 <a target="_blank" rel="noopener" href="https://github.com/Azure/aad-pod-identity">aad-pod-identity</a> 的元件為每一個 Pod 設定不同的權限，CA 也接受直接提供 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals">service principals</a> 資訊。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">data</span><span class="token punctuation">:</span>
+  <span class="token key atrule">ClientID</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>client<span class="token punctuation">-</span>id<span class="token punctuation">></span>
+  <span class="token key atrule">ClientSecret</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>client<span class="token punctuation">-</span>secret<span class="token punctuation">></span>
+  <span class="token key atrule">ResourceGroup</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>resource<span class="token punctuation">-</span>group<span class="token punctuation">></span>
+  <span class="token key atrule">SubscriptionID</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>subscription<span class="token punctuation">-</span>id<span class="token punctuation">></span>
+  <span class="token key atrule">TenantID</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>tenant<span class="token punctuation">-</span>id<span class="token punctuation">></span>
+  <span class="token key atrule">Deployment</span><span class="token punctuation">:</span> &lt;base64<span class="token punctuation">-</span>encoded<span class="token punctuation">-</span>azure<span class="token punctuation">-</span>initial<span class="token punctuation">-</span>deploy<span class="token punctuation">-</span>name<span class="token punctuation">></span>
+  <span class="token key atrule">VMType</span><span class="token punctuation">:</span> c3RhbmRhcmQ=
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Secret
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> cluster<span class="token punctuation">-</span>autoscaler<span class="token punctuation">-</span>azure
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<div class="msg-info">雖然說這種方法是使用 <a target="_blank" rel="noopener" href='https://github.com/Azure/aks-engine'>aks-engine</a> 部屬時用的，但實際測試也可以用在 AKS 上 (不啟用預設的 Auto Scaler)，不過官方文件沒有找到相關的說明。</div>
+
+
+
+<h1 id="其他技巧"><a href="#其他技巧" class="headerlink" title="其他技巧"></a>其他技巧</h1><p>基本介紹和部屬就到這邊了，最後和大家分享一些實用的小技巧。</p>
+<h2 id="Auto-Discovery"><a href="#Auto-Discovery" class="headerlink" title="Auto Discovery"></a>Auto Discovery</h2><p>CA 在 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md#auto-discovery-setup">Azure</a> 和 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup">AWS</a> 都支援使用 Auto dicovery 的方式設定 node，只需要加上 <code>--node-group-auto-discovery</code> 這個 flag，並告訴 CA 甚麼 Tag 的 ASG/VMSS 是可以拿來當作 node groups 的，官方建議使用這兩個 tag 確保多個群集可以同時運作。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml">k8s.io/cluster<span class="token punctuation">-</span>autoscaler/&lt;YOUR CLUSTER NAME<span class="token punctuation">></span>
+k8s.io/cluster<span class="token punctuation">-</span>autoscaler/enabled<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>CA 會自動判斷 node groups 的最大和最小值，在 Azure 上必須加上而外的 tag <code>min</code> 和 <code>max</code>，CA 每隔一段時間會去抓一次 Cloud 上的設定，所以動態設定 Tags/ASG 理論上是可行的。</p>
+<h2 id="Node-template"><a href="#Node-template" class="headerlink" title="Node template"></a>Node template</h2><p>當你的 Node Group 有可能會全數關閉時 (Scale to zero)，Pod 又有特殊的 Node selector 時，我們必須告訴 CA 這個 Node Group 開啟時會產生什麼 label 或 taint。</p>
+<p>比如說我們有一個 Pod 下了這樣的 Node Selector：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">nodeSelector</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disktype</span><span class="token punctuation">:</span> ssd<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>此時我們必須在對應的 Node Group 上加上特殊的 Tag，稱為 Node Template，以上面的例子為例 Tag 會長的像這樣：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">k8s.io/cluster-autoscaler/node-template/label/disktype<span class="token operator">=</span>ssd<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<div class="msg-warn">在 Azure 中需要把斜線 / 換成底線 _，因為 Azure tag 不允許有斜線</div>
+
+<p>Taint 也是同樣的道理，需要注意的是 Node Template 是告訴 CA 我的 Node 「將會」有甚麼樣的 Label / Taint ，CA 並不會主動幫 Node 加上這些資訊，還是得靠其他方式加入，例如 EKS 中可以使用 <code>--kubelet-extra-args</code> 在啟動時加上資訊 (<a target="_blank" rel="noopener" href="https://github.com/awslabs/amazon-eks-ami/blob/master/files/bootstrap.sh">詳細資料</a>)。</p>
+<h2 id="ConfigMap"><a href="#ConfigMap" class="headerlink" title="ConfigMap"></a>ConfigMap</h2><p>CA 成功啟動後會在相同的 Namespace 底下建立 configmap <code>cluster-autoscaler-status</code>，這裡會有 CA 的最新狀態，<a href="#%E4%BD%BF%E7%94%A8-AKS">使用 AKS</a> 時這個 configmap 非常實用。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml">$ kubectl get configmap <span class="token punctuation">-</span>n kube<span class="token punctuation">-</span>system cluster<span class="token punctuation">-</span>autoscaler<span class="token punctuation">-</span>status <span class="token punctuation">-</span>o yaml
+
+<span class="token key atrule">status</span><span class="token punctuation">:</span> <span class="token punctuation">|</span>+
+    Cluster<span class="token punctuation">-</span>autoscaler status at 2020<span class="token punctuation">-</span>05<span class="token punctuation">-</span>10 05<span class="token punctuation">:</span>19<span class="token punctuation">:</span>13.877534294 +0000 UTC<span class="token punctuation">:</span>
+    <span class="token key atrule">Cluster-wide</span><span class="token punctuation">:</span>
+      <span class="token key atrule">Health</span><span class="token punctuation">:</span>      Healthy (ready=3 unready=0 notStarted=0 longNotStarted=0 registered=3 longUnregistered=0)
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      2020<span class="token punctuation">-</span>05<span class="token punctuation">-</span>10 05<span class="token punctuation">:</span>19<span class="token punctuation">:</span>13.718138783 +0000 UTC m=+1457411.069735333
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 2020<span class="token punctuation">-</span>04<span class="token punctuation">-</span>23 08<span class="token punctuation">:</span>30<span class="token punctuation">:</span>40.150207115 +0000 UTC m=+97.501803660
+      <span class="token key atrule">ScaleUp</span><span class="token punctuation">:</span>     NoActivity (ready=3 registered=3)
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      2020<span class="token punctuation">-</span>05<span class="token punctuation">-</span>10 05<span class="token punctuation">:</span>19<span class="token punctuation">:</span>13.718138783 +0000 UTC m=+1457411.069735333
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 2020<span class="token punctuation">-</span>04<span class="token punctuation">-</span>23 08<span class="token punctuation">:</span>30<span class="token punctuation">:</span>40.150207115 +0000 UTC m=+97.501803660
+      <span class="token key atrule">ScaleDown</span><span class="token punctuation">:</span>   NoCandidates (candidates=0)
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      2020<span class="token punctuation">-</span>05<span class="token punctuation">-</span>10 05<span class="token punctuation">:</span>19<span class="token punctuation">:</span>13.718138783 +0000 UTC m=+1457411.069735333
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 2020<span class="token punctuation">-</span>04<span class="token punctuation">-</span>23 08<span class="token punctuation">:</span>30<span class="token punctuation">:</span>40.150207115 +0000 UTC m=+97.501803660
+
+    <span class="token key atrule">NodeGroups</span><span class="token punctuation">:</span>
+      <span class="token key atrule">Name</span><span class="token punctuation">:</span>        &lt;Node group name <span class="token comment" spellcheck="true">#1></span>
+      <span class="token key atrule">Health</span><span class="token punctuation">:</span>      Healthy (ready=0 unready=0 notStarted=0 longNotStarted=0 registered=0 longUnregistered=0 cloudProviderTarget=0 (minSize=1<span class="token punctuation">,</span> maxSize=2))
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      0001<span class="token punctuation">-</span>01<span class="token punctuation">-</span>01 00<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 +0000 UTC
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 0001<span class="token punctuation">-</span>01<span class="token punctuation">-</span>01 00<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 +0000 UTC
+      <span class="token key atrule">ScaleUp</span><span class="token punctuation">:</span>     NoActivity (ready=0 cloudProviderTarget=0)
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      0001<span class="token punctuation">-</span>01<span class="token punctuation">-</span>01 00<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 +0000 UTC
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 0001<span class="token punctuation">-</span>01<span class="token punctuation">-</span>01 00<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 +0000 UTC
+      <span class="token key atrule">ScaleDown</span><span class="token punctuation">:</span>   NoCandidates (candidates=0)
+                   <span class="token key atrule">LastProbeTime</span><span class="token punctuation">:</span>      2020<span class="token punctuation">-</span>05<span class="token punctuation">-</span>10 05<span class="token punctuation">:</span>19<span class="token punctuation">:</span>13.718138783 +0000 UTC m=+1457411.069735333
+                   <span class="token key atrule">LastTransitionTime</span><span class="token punctuation">:</span> 2020<span class="token punctuation">-</span>04<span class="token punctuation">-</span>23 08<span class="token punctuation">:</span>30<span class="token punctuation">:</span>40.150207115 +0000 UTC m=+97.501803660<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Github - Cluster Autoscaler</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler">Azure - Automatically scale a cluster to meet application demands on Azure Kubernetes Service (AKS)</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2020/05/10 13:51
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/kubernetes-cluster-autoscaler.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/697ddbee671c9b390919b05d0806ab8d83ef34ce" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/05/10 14:05 - release Kubernetes cluster autoscaler v1</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2020/05/10/kubernetes-cluster-autoscaler/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

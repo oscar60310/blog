@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     使用 Clasp 開發 Apps Script |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2020/08/28/google-clasp/" />
+  <meta property="og:site_name" content="使用 Clasp 開發 Apps Script" />
+  
+  <meta property="article:published_time" content="2020-08-28" />
+  
+  <meta name="description" content="以前會寫一點 Google Apps Script 來協助更新 Google Sheet，前幾天突然發現她終於使用 V8 啦，甚至可以使用 Typescript 來撰寫，這篇文章來介紹實作這些功能的工具 Clasp。" />
+  <meta name="og:description" content="以前會寫一點 Google Apps Script 來協助更新 Google Sheet，前幾天突然發現她終於使用 V8 啦，甚至可以使用 Typescript 來撰寫，這篇文章來介紹實作這些功能的工具 Clasp。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2020/08/28/google-clasp/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "381a20f42ed902e524c3ef8c1dfeff92c55f4aea838de1d88ff4ed377f1b0502"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="google-clasp-qaqaa">
+    <div class="post-description">
+      <h1>
+        使用 Clasp 開發 Apps Script
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 2 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/8/28 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/%E5%B7%A5%E5%85%B7/ ">工具</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E7%9F%AD%E7%AF%87/ ">短篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E5%85%A5%E9%96%80/ ">入門</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Apps-Script/ ">Apps Script</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <h1 id="Apps-Script"><a href="#Apps-Script" class="headerlink" title="Apps Script"></a>Apps Script</h1><p>以前會寫少少的 <a target="_blank" rel="noopener" href="https://developers.google.com/apps-script/">Apps Script</a> 來協助操作 Google Sheet 或其他 Google 服務，就是直接從 Google Sheet 裡面的指令碼編輯器直接進到 Script 編輯畫面。</p>
+<div class="mid"><img alt="script-editor.png" style="" src="/2020/08/28/google-clasp/script-editor.png" /></div>
+
+<p>比如說利用 <a target="_blank" rel="noopener" href="https://developers.google.com/apps-script/guides/web">doPost()</a> 來當作 Webhook 塞資料進到表格中之類的簡單功能。</p>
+<p>不過這個東西真的不是很好寫，因為是使用 <a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino">Rhino</a> 的關係，只能寫 ES5 語法，沒有 Class、沒有 Arrow Function … 😂</p>
+<p>而且必須使用線上 IDE 的關係，也沒有辦法做版控 …</p>
+<h1 id="Clasp"><a href="#Clasp" class="headerlink" title="Clasp"></a>Clasp</h1><p>還好現在 Apps Script 已經支援 <a target="_blank" rel="noopener" href="https://developers.google.com/apps-script/guides/v8-runtime">V8 Runtime</a> 了，Google 也推出了 <a target="_blank" rel="noopener" href="https://github.com/google/clasp">Clasp</a> 讓你可以在本地開發。他主要有幾個功能：</p>
+<ul>
+<li>本地開發：用自己習慣的 IDE，好好地做版控，多人一起開發。</li>
+<li>支援資料夾：原本使用顯上編輯器是沒有階層的，全部的檔案都只能撒在一起，Clasp 會協助我們把結構化的檔案放到 Apps Script。</li>
+<li>支援 Typescript：除了可以使用新語法，連 Typescript 也支援，實際上會使用 <a target="_blank" rel="noopener" href="https://github.com/grant/ts2gas">ts2gas</a> 將我們的程式轉為 Apps Script 後上傳。</li>
+</ul>
+<div class="msg-info">使用 Typescript 記得安裝 @types/google-apps-script 來定義 google apps script 的型別</div>
+
+<h2 id="安裝與使用"><a href="#安裝與使用" class="headerlink" title="安裝與使用"></a>安裝與使用</h2><p>直接使用 npm 安裝</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">npm</span> <span class="token function">install</span> -g @google/clasp<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>安裝完成後，操作起來就像 Git 一樣</p>
+<p>使用現有專案</p>
+<pre class="line-numbers language-bash"><code class="language-bash">clasp clone <span class="token string">"https://script.google.com/d/xxxxxx/edit"</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>上傳</p>
+<pre class="line-numbers language-bash"><code class="language-bash">clasp push<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>其他操作像是遠端偵錯等等的功能就麻煩參考官方文件了。</p>
+<h2 id="claspignore"><a href="#claspignore" class="headerlink" title=".claspignore"></a>.claspignore</h2><p>就如同 gitignore 一樣，clasp 也可以設定哪些檔案不要上傳到 Apps Script，因為預設會把所有上傳的檔案都跑過，所以不必要的檔案就不要上傳了，在 ignore file 可以這樣設定：</p>
+<pre class="line-numbers language-txt"><code class="language-txt">**/**
+!src/**
+!appsscript.json<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>除了 src 底下的檔案和專案設定檔，其他的一律略過，這樣就簡單多啦。</p>
+<h1 id="結果"><a href="#結果" class="headerlink" title="結果"></a>結果</h1><p>當我們 push 回 Apps Script 時，會上傳編譯後的檔案，資料夾也會被換成檔名前綴，不過我們再也不需要維護 Apps Script 的程式了。😁</p>
+<div class="mid"><img alt="編譯後的部分程式" style="" src="/2020/08/28/google-clasp/script-result.png" /></div><p class="img-desc">編譯後的部分程式</p>
+
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/google/clasp">Github - clasp</a></li>
+<li><a target="_blank" rel="noopener" href="https://developers.google.com/apps-script">Google apps script document</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2020/08/28 21:20
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/google-clasp.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/a5249e658ec2f8b2ddb4afc1291d89335fa37e3b" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/08/28 22:57 - publish google clasp</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2020/08/28/google-clasp/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

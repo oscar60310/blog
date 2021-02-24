@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="" />
+  <meta property="og:site_name" content="" />
+  
+  <meta name="description" content="" />
+  <meta name="og:description" content="" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "tags/Blob/index.html"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <section class="banner box">
+  
+  <div class="sub-title">標籤: Blob</div>
+  
+</section>
+
+<div class="box">
+  <div style="display: flex;">
+    <div class="article-list">
+      
+      <div class="article-pre">
+  <h1><a href="/2020/04/19/azure-blob-sas/">使用 Azure user delegation SAS 來簽署 Blob 權限 </a>
+  </h1>
+  <div class="info">
+  
+  <div>預估閱讀時間: 3 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/4/19 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/%E9%9B%B2%E7%AB%AF/ ">雲端</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E7%9F%AD%E7%AF%87/ ">短篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Azure/ ">Azure</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/Blob/ ">Blob</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+  
+  <div class="description">最近在把原本使用 AWS S3 的服務轉往 Azure storage，需要實作類似 S3 中 Presigned URL 的功能，順便寫點筆記紀錄一下，這篇文章我會使用微軟建議的 User delegation SAS 來增加安全性。 </div>
+  
+  <div class="excerpt"> 
+    最近在把原本使用 AWS S3 的服務轉往 Azure storage，需要實作類似 S3 中 Presigned URL 的功能，順便寫點筆記紀錄一下。
+
+Presigned URL
+在 AWS S3 中有個稱為 Presigned URL 的功能，簡單來說你可以產生一個專用的網址給 Client 端，裡面限定權限和使用期限之類的訊息，Client 端拿到這個網址後就可以直接對資源發出請求，例如下載/上傳檔案之類的事情。你可以完全管理權限，流量又不必經由伺服器再到客戶端，在處理大檔案的時候非常實用。
+
+Azure SAS
+在 Azure Blob storage (類似 S3 的服務)中也有
+    </div>
+</div>
+      
+    </div>
+    <div class="profile">
+  <h2 class="mid">Goofy's blog</h2>
+  <div>Hi, 這是一個沒有技術的工程師的部落格，會寫些技術筆記、旅遊紀錄以及大量的廢話，歡迎拍打餵食。</div>
+  <div>有任何建議都可以在文章下方留言或是到 <a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog">Github</a>
+    上開 Issue 😃</div>
+</div>
+  </div>
+</div>
+
+<div class="box">
+  <div>
+    
+  </div>
+</div>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/tags/Blob/index.html" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

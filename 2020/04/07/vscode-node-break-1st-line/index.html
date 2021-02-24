@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     VS Code 起始中斷點問題 |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2020/04/07/vscode-node-break-1st-line/" />
+  <meta property="og:site_name" content="VS Code 起始中斷點問題" />
+  
+  <meta property="article:published_time" content="2020-04-07" />
+  
+  <meta name="description" content="使用 Typescript 配合 VS Code 的 debugger 時，時常會自動停在程式的第一行，這篇文章解釋了一個可能的原因和解決方法。" />
+  <meta name="og:description" content="使用 Typescript 配合 VS Code 的 debugger 時，時常會自動停在程式的第一行，這篇文章解釋了一個可能的原因和解決方法。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2020/04/07/vscode-node-break-1st-line/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "4713417419d04a837a0289823cac158e33efff4eb4bba3fea4c31ccdefb315f8"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="VS Code 起始中斷點問題">
+    <div class="post-description">
+      <h1>
+        VS Code 起始中斷點問題
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 2 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2020/4/7 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E7%9F%AD%E7%AF%87/ ">短篇</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E5%95%8F%E9%A1%8C/ ">問題</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E5%B7%B2%E8%A7%A3%E6%B1%BA/ ">已解決</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <h1 id="問題"><a href="#問題" class="headerlink" title="問題"></a>問題</h1><p>使用 Typescript 配合 VS Code 的 debugger 開發很方便，配合上 <a target="_blank" rel="noopener" href="https://github.com/TypeStrong/ts-node">ts-node</a> 的 register 就可以在 typescript 順暢的使用中斷點功能了。</p>
+<p>不過最近在開發的時候好幾的專案都有同樣的問題，就是每次執行的時候總會在第一行自動停止，必須手動按下繼續，像下圖這樣；</p>
+<div class="mid"><img alt="break-at-1st.png" style="" src="/2020/04/07/vscode-node-break-1st-line/break-at-1st.png" /></div>
+
+<p>沒有下任何中斷點的情況下會自動暫停，而且是在專案變大之後才會發生，這是我的 launch config</p>
+<pre class="line-numbers language-json"><code class="language-json">   <span class="token punctuation">{</span>
+      <span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"Node Inspector"</span><span class="token punctuation">,</span>
+      <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"node"</span><span class="token punctuation">,</span>
+      <span class="token property">"request"</span><span class="token operator">:</span> <span class="token string">"launch"</span><span class="token punctuation">,</span>
+      <span class="token property">"args"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"${workspaceRoot}/src/index.ts"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token property">"runtimeArgs"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"-r"</span><span class="token punctuation">,</span> <span class="token string">"ts-node/register"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token property">"cwd"</span><span class="token operator">:</span> <span class="token string">"${workspaceRoot}"</span><span class="token punctuation">,</span>
+      <span class="token property">"protocol"</span><span class="token operator">:</span> <span class="token string">"inspector"</span><span class="token punctuation">,</span>
+      <span class="token property">"internalConsoleOptions"</span><span class="token operator">:</span> <span class="token string">"openOnSessionStart"</span><span class="token punctuation">,</span>
+      <span class="token property">"env"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"NODE_ENV"</span><span class="token operator">:</span> <span class="token string">"development"</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"outputCapture"</span><span class="token operator">:</span> <span class="token string">"std"</span><span class="token punctuation">,</span>
+      <span class="token property">"console"</span><span class="token operator">:</span> <span class="token string">"integratedTerminal"</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h1 id="解決方案"><a href="#解決方案" class="headerlink" title="解決方案"></a>解決方案</h1><p>VS code 在啟動 node 程式時，其實是開啟 node 的 inspect 模式然後向他連線，為了避免我們的程式在 debug client (也就是 vs code) 連線之前就開始跑了，預設會加上 <code>--inspect-brk    </code> 這個選項，這會讓我們的程式停在第一行。</p>
+<p>通常 vs code 在 attach nodejs 後，會自動讓程式繼續跑，不過如果你的 node 開得特別慢，比如說我的案例是因為需要經過 ts-node，跑起來基本上都需要超過 10 秒，這時 vs code 就沒辦法自動繼續執行了。</p>
+<p>解決方法也很簡單，你可以自己開啟 node debug server 且不要加上 brk 選項，或者在 launch.json 中，把 <code>timeout</code> 的值拉高，這樣就沒問題了。</p>
+<h1 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://nodejs.org/en/docs/guides/debugging-getting-started/">Node 官網 - debugger getting start</a></li>
+<li><a target="_blank" rel="noopener" href="https://code.visualstudio.com/docs/nodejs/nodejs-debugging">VS Code - nodejs debugging</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Microsoft/vscode/issues/49222">VS Code Issue - Ghost breakpoints being hit on debug start</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2020/04/07 23:53
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/vscode-node-break-1st-line.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/98a01667fa08d8aaac2f3c95ea16ef16203c9fcc" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/08 19:03 - update post tags</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/07a0e04fb2e5d4562444482b582b25f3134aadcc" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/08 01:03 - fix typo</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/590c41d2e6c5779258d0eb48c62c95a4d1b98d07" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/08 00:37 - add vscode node debugger issue post</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2020/04/07/vscode-node-break-1st-line/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>

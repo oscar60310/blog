@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+     智慧體重計破壞筆記 |  Goofy's Blog
+  </title>
+  <link rel="icon" type="image/svg+xml" href="/image/icon.svg">
+  
+  <meta property="og:url" content="https://blog.cptsai.com/2018/05/10/smart-scale/" />
+  <meta property="og:site_name" content="智慧體重計破壞筆記" />
+  
+  <meta property="article:published_time" content="2018-05-10" />
+  
+  <meta name="description" content="這是我簡單紀錄去年體重計壯烈犧牲的過程，利用樹莓派接收智慧體重計發送的藍芽訊號，達到不用手機也能把數據上傳到雲端的無用功能。" />
+  <meta name="og:description" content="這是我簡單紀錄去年體重計壯烈犧牲的過程，利用樹莓派接收智慧體重計發送的藍芽訊號，達到不用手機也能把數據上傳到雲端的無用功能。" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_TW" />
+  
+  <meta property="og:image" content="https://blog.cptsai.com/image/icon.png" />
+  
+  <script>
+    dataLayer = [{
+      identifier: "2018/05/10/smart-scale/"
+    }]
+  </script>
+  <!-- Google Tag Manager -->
+  
+  <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+          'gtm.start':
+            new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WNQNTJK');</script>
+  
+  <!-- End Google Tag Manager -->
+
+  <!-- <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" /> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.css">
+  
+<link rel="stylesheet" href="/css/index.css">
+
+<meta name="generator" content="Hexo 5.3.0"><link rel="alternate" href="/feed.xml" title="Goofy's Blog" type="application/rss+xml">
+<link rel="stylesheet" href="/css/prism.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNQNTJK" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header box">
+    <div class="container">
+      <a class="site-title" href="https://blog.cptsai.com" title="Goofy's Blog">
+        <img src="/image/icon.svg" />
+        <div>
+          Goofy's Blog
+        </div>
+      </a>
+      <a class="about" href="/about ">關於</a>
+    </div>
+  </header>
+
+  <script>const identifier = "fdbfd680360d90acbf2b5b6bf3a9394b3011bee6d44cc7f50ecdc30aca89a377"</script>
+<article class="post">
+  <div class="box geo-pattern" data-pattern="智慧體重計破壞筆記">
+    <div class="post-description">
+      <h1>
+        智慧體重計破壞筆記
+      </h1>
+      <div class="info">
+  
+  <div>預估閱讀時間: 3 分鐘 </div>
+  
+  <div class="other-info">
+    <div class="v-center">
+      <span class="material-icons">
+        event
+      </span>
+      <span>2018/5/10 </span>
+    </div>
+    <!-- Categories -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/ ">程式</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        work
+      </span>
+      <span><a href="/categories/%E7%A8%8B%E5%BC%8F/iot/ ">iot</a> </span>
+    </div>
+    
+    
+    <!-- Tags -->
+    
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E6%A8%B9%E8%8E%93%E6%B4%BE/ ">樹莓派</a> </span>
+    </div>
+    
+    <div class="v-center">
+      <span class="material-icons">
+        turned_in
+      </span>
+      <span><a href="/tags/%E4%B8%AD%E7%AF%87/ ">中篇</a> </span>
+    </div>
+    
+    
+  </div>
+</div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="post-content">
+      <div class="content">
+        <p>這是我簡單紀錄去年體重計壯烈犧牲的過程，利用樹莓派接收智慧體重計發送的藍芽訊號，達到不用手機也能把數據上傳到雲端的<del>無用</del>功能。</p>
+<a id="more"></a>
+
+<h2 id="改造體重計-物理"><a href="#改造體重計-物理" class="headerlink" title="改造體重計(物理)"></a>改造體重計(物理)</h2><p>2017 年底剛好有每天記錄體重的需求，又不想要每次量完都得開電腦手動紀錄，所以就把腦動到體重計上了，如果能把量測到的數值傳到<a target="_blank" rel="noopener" href="https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/">樹莓派</a>上，再利用 wifi 訊號傳到 Google Fit 上，應該能大幅增加每天記錄體重的成功機率 !</p>
+<div class="mid"><img alt="1_Connect_Directly.svg" style="" src="/2018/05/10/smart-scale/1_Connect_Directly.svg" /></div>
+
+<p>火速到電子材料行買了 <a target="_blank" rel="noopener" href="https://www.mouser.com/ds/2/813/hx711_english-1022875.pdf">HX-711</a> 感測模組，體重計上有四個 Load Cell ，只要把他們組成一組<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Wheatstone_bridge">惠斯同電橋</a>，再把輸出訊號給壓力模組，最後利用樹莓派接收轉好的數位訊號就大功告成了，就和這<a target="_blank" rel="noopener" href="https://learn.sparkfun.com/tutorials/getting-started-with-load-cells">這個網站</a>寫的一樣簡單:)</p>
+<div class="mid"><img alt="2_HX711_AND_BIRDGE.svg" style="" src="/2018/05/10/smart-scale/2_HX711_AND_BIRDGE.svg" /></div>
+
+<p>我俐落的剪斷 Load Cell 的電線，然後組成惠 …</p>
+<div class="mid"><img alt="3_BROKEN_SCALE.png" style="" src="/2018/05/10/smart-scale/3_BROKEN_SCALE.png" /></div>
+
+<p><strong>沒有</strong>，花了兩小時後，我把整組電路連著體重計一起放到櫃子裡收藏了。剛好遇到雙十一電商們推出的特惠活動，一台有藍芽功能的智慧體重計就這樣神奇的出現在我的桌上 XD</p>
+<div class="msg-info">舊的不去，新的不來</div>
+
+<h2 id="雲麥好輕"><a href="#雲麥好輕" class="headerlink" title="雲麥好輕"></a>雲麥好輕</h2><p>還是乖乖用軟體的方式解決吧…</p>
+<div class="msg-warn">先說會挑這款體重計只是因為剛好有藍芽功能符合需求而已，沒有要工商，也沒有要詆毀這個產品的意思</div>
+
+<p>新入手的是「雲麥好輕 mini2」這台體脂計，優惠過後 500 塊台幣有找，可以在 Google Play 上下載專用的應用程式，連線上產品就可以使用了，有個小缺點就是他沒有記憶功能，所以每次量體重的時候都得開著 APP，還有程式一打開就要求的權限 … 怪不能評分會如此悽慘 XD</p>
+<div class="mid"><img alt="4_YUNMAI_APP_SNAPSHOT.png" style="" src="/2018/05/10/smart-scale/4_YUNMAI_APP_SNAPSHOT.png" /></div>
+
+<h2 id="查看藍芽訊息"><a href="#查看藍芽訊息" class="headerlink" title="查看藍芽訊息"></a>查看藍芽訊息</h2><p>在開始寫程式前，我們得想想如何解析體重計傳送的藍芽訊號，透過 <a target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=zh_TW">nRF Connect for Mobile</a> 這款應用程式連接上 BLE 裝置，先來看看到底有什麼資料會傳出來。連線上體重計後，顯示面板上的藍芽指示燈也成功亮起，這時候就可以來看看傳送的資料啦。</p>
+<div style="width: 100%;overflow-x:auto;margin-bottom:10px;text-align:center">
+<iframe width="350" height="300" src="https://www.youtube-nocookie.com/embed/1u8iratFeBM?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+影片中畫面和顯示有些微的時間差，但還是可以看出當重量變化時，後 4 個 byte 會不斷的變化。例如當重量是 5.5 時收到的值是
+
+<pre><code>0D-1F-0B-01-5A-F4-6F-BF-[02-28]-41</code></pre>
+<p>影片中可以看到第八個 byte 值隨著時間每秒往上加，所以我猜這個和時間有關，第九和十個 byte 就有趣了，把它換成十進位的話是 <code>552</code>，除上 100 就是螢幕上顯示的體重 !</p>
+<p>當重量穩定後，體重計會測量體脂和其他訊息，這時候傳送出來的訊息就變多了，下面這段影片顯示穩定後的資料。</p>
+<div style="width: 100%;overflow-x:auto;margin-bottom:10px;text-align:center">
+
+<iframe width="350" height="300" src="https://www.youtube-nocookie.com/embed/a4uKwkjseZc?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
+<p>重量穩定在 5.3 時的訊息是</p>
+<pre><code>0D-1F-12-02-00-5A-F4-6F-B6-00-00-00-00-[02-12]-00-00-00-00-6E</code></pre>
+<p>可以看到 14 和 15 位 <code>0212</code> 轉十進位是 <code>530</code>，體重的訊息在這邊，後面接的零是因為我不是真人站在上面，所以沒有體脂之類的訊息</p>
+<div class="msg-info">至於訊息中的其他資訊因為不會顯示在體重計螢幕上，可能得開</div>
+
+<h2 id="使用-NodeJs-連接"><a href="#使用-NodeJs-連接" class="headerlink" title="使用 NodeJs 連接"></a>使用 NodeJs 連接</h2><p>知道 Service UID 和內容代表的意思後，就是寫程式連接的時候啦，只要能和 BLE 裝置通訊的語言都可以，這次我用 node js 搭配 <a target="_blank" rel="noopener" href="https://github.com/noble/noble">noble</a> 這個模組，它可以讓我們很簡單的處理通訊的問題。</p>
+<p>首先開啟藍芽搜索設備，當發現體重計時(利用 uuid 判斷)，發送連接要求。</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token comment" spellcheck="true">// 當找到目標藍芽設備時，停止掃描，並發送連線要求</span>
+noble<span class="token punctuation">.</span><span class="token function">on</span><span class="token punctuation">(</span><span class="token string">"discover"</span><span class="token punctuation">,</span> peripheral <span class="token operator">=</span><span class="token operator">></span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>peripheral<span class="token punctuation">.</span>uuid <span class="token operator">===</span> yunId<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    noble<span class="token punctuation">.</span><span class="token function">stopScanning</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    peripheral<span class="token punctuation">.</span><span class="token function">on</span><span class="token punctuation">(</span><span class="token string">"connect"</span><span class="token punctuation">,</span> onDeviceConnected<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    peripheral<span class="token punctuation">.</span><span class="token function">on</span><span class="token punctuation">(</span><span class="token string">"servicesDiscover"</span><span class="token punctuation">,</span> onServicesDiscover<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    device <span class="token operator">=</span> peripheral<span class="token punctuation">;</span>
+    peripheral<span class="token punctuation">.</span><span class="token function">connect</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 當設備狀態轉為 poweredOn 時，開始掃描週邊的藍芽設備</span>
+noble<span class="token punctuation">.</span><span class="token function">on</span><span class="token punctuation">(</span><span class="token string">"stateChange"</span><span class="token punctuation">,</span> state <span class="token operator">=</span><span class="token operator">></span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>state <span class="token operator">===</span> <span class="token string">"poweredOn"</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    noble<span class="token punctuation">.</span><span class="token function">startScanning</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>當連接上裝置後，這時候體重計上藍芽連線指示燈應該會亮起，尋找目標 Service 以及 Characteristics。</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token comment" spellcheck="true">// 找特定 service</span>
+<span class="token keyword">function</span> <span class="token function">onDeviceConnected</span><span class="token punctuation">(</span>event<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  device<span class="token punctuation">.</span><span class="token function">discoverServices</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">"ffe0"</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment" spellcheck="true">// 找 characteristics</span>
+<span class="token keyword">function</span> <span class="token function">onServicesDiscover</span><span class="token punctuation">(</span>service<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  service<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">once</span><span class="token punctuation">(</span><span class="token string">"characteristicsDiscover"</span><span class="token punctuation">,</span> onCharFound<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  service<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">discoverCharacteristics</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>找到 characteristics 後，我們得訂閱之後裝置才接收的到更新，最後就是處理接收到的資料。<br>資料處理分兩部份，短資料代表重量還不穩定，長資料代表量測完成，這時我們就可以把資料儲存起來。</p>
+<pre class="line-numbers language-javascript"><code class="language-javascript"><span class="token comment" spellcheck="true">// 訂閱</span>
+<span class="token keyword">function</span> <span class="token function">onCharFound</span><span class="token punctuation">(</span>chara<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  chara<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">on</span><span class="token punctuation">(</span><span class="token string">"read"</span><span class="token punctuation">,</span> onReceiveData<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  chara<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">notify</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment" spellcheck="true">// 收到資料</span>
+<span class="token keyword">function</span> <span class="token function">onReceiveData</span><span class="token punctuation">(</span>data<span class="token punctuation">,</span> notify<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment" spellcheck="true">// 短資料</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>data<span class="token punctuation">.</span>length <span class="token operator">===</span> <span class="token number">11</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    done <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token keyword">const</span> weight <span class="token operator">=</span> <span class="token punctuation">(</span>data<span class="token punctuation">[</span><span class="token number">8</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">256</span> <span class="token operator">+</span> data<span class="token punctuation">[</span><span class="token number">9</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.01</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// 處理尚未穩定的重量</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>data<span class="token punctuation">.</span>length <span class="token operator">===</span> <span class="token number">20</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>done<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    done <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token keyword">const</span> weight <span class="token operator">=</span> <span class="token punctuation">(</span>data<span class="token punctuation">[</span><span class="token number">13</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">256</span> <span class="token operator">+</span> data<span class="token punctuation">[</span><span class="token number">14</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.01</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// 處理量測完成的重量</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>結合到 ionic 應用程式後，放到樹梅派上，和體重計通訊的部分就完成了，結果如下面的影片，上方式應用程式中的畫面，下方為體重機螢幕</p>
+<div style="width: 100%;overflow-x:auto;margin-bottom:10px;text-align:center">
+<iframe width="430" height="315" src="https://www.youtube-nocookie.com/embed/36ocp1pQ10w?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
+<div class="msg-info">當樹梅派上的按鈕被按下後，我們才會去連接體重計，並在量測完後馬上斷開連線</div>
+
+<h2 id="上傳資料"><a href="#上傳資料" class="headerlink" title="上傳資料"></a>上傳資料</h2><p><a target="_blank" rel="noopener" href="https://developers.google.com/fit/">Google Fit API</a> 可以讓我們上傳體重資訊，並在 Google FIT 中和運動時間等等其他數據一同檢視，這部分只要參考官方文件，應該就能順利新增資料。</p>
+<h2 id="後計"><a href="#後計" class="headerlink" title="後計"></a>後計</h2><p>搞這些東西多花的時間，應該夠我手動紀錄體重好幾年了吧 XD<br>在 Github 上有個開源 APP 叫做 <a target="_blank" rel="noopener" href="https://github.com/oliexdev/openScale">OpenScale</a>，他支援很多藍芽體重計，朋友們也可以試試看直接使用。</p>
+<h2 id="Credit"><a href="#Credit" class="headerlink" title="Credit"></a>Credit</h2><p>本篇部落格中的圖片來自下列網站</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.flaticon.com/authors/smalllikeart">Smalllikeart from Flaticon</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.flaticon.com/authors/smashicons">Smashicons from Flaticon</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.flaticon.com/authors/monkik">Monkik from Flationc</a></li>
+</ul>
+
+          <div class="post-poll">
+  <img src="/image/icon.svg" />
+  <div>這篇文章有幫助到您嗎?</div>
+  <div class="poll-options">
+    <button value="n">沒有</button>
+    <button value="y">有</button>
+  </div>
+</div>
+
+<script defer src="/js/post-poll.js"></script>
+      </div>
+      <div class="side-bar">
+        <div class="toc-box">
+          <h3>文章目錄</h3>
+          <div class="toc">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box toc-end">
+    <div class="post-info line">
+      <div>文章發布時間: 2018/05/10 10:20
+      </div>
+      <div>文章更新時間: 2021/02/24 19:29
+      </div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="thank">謝謝你看完這篇文章，若有任何錯誤，麻煩在下面留言，我會盡快回覆。</div>
+  </div>
+  <div class="box">
+    <div><a target="_blank" rel="noopener" href="https://github.com/oscar60310/blog/tree/master/source/_posts/smart-scale.md">編輯這篇文章</a></div>
+  </div>
+  
+    <div class="box">
+      <div class="history">
+  <h4>近期修訂紀錄</h4>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/f3fae91ed47e194631976ffd22e9f21aca78c741" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/07 00:22 - add description</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/87b72a141f39bd640a95e185c83cd5c312bc08d3" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/07 00:13 - add tags</span>
+  </a>
+  
+  <a class="record" href="https://github.com/oscar60310/blog/commit/bd15b0ca2c034abe5e69c20c9a634cf4b0ce3dac" target="_blank">
+    <span class="material-icons">
+      history
+    </span>
+    <span>2020/04/05 01:44 - remove prefix naming</span>
+  </a>
+  
+</div>
+    </div>
+    
+      <div class="box">
+        
+
+<div id="remark42"></div>
+
+<script>
+  var remark_config = {
+    host: 'https://comment.cptsai.com',
+    site_id: 'cptsai',
+  };
+
+  const loadDisqus = () => {
+    (function (c) {
+      for (var i = 0; i < c.length; i++) {
+        var d = document, s = d.createElement('script');
+        s.src = remark_config.host + '/web/' + c[i] + '.js';
+        s.defer = true;
+        (d.head || d.body).appendChild(s);
+      }
+    })(remark_config.components || ['embed']);
+  };
+  const onScroll = () => {
+    const dom = document.querySelector('#remark42');
+    if (window.outerHeight + window.scrollY > dom.offsetTop) {
+      window.removeEventListener('scroll', onScroll);
+      loadDisqus();
+    }
+  }
+  window.addEventListener('scroll', onScroll)
+</script>
+
+
+      </div>
+</article>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js"></script>
+<script src="https://blog.cptsai.com/js/toc.js"></script>
+
+<script>
+  const tocBox = document.querySelector(".toc-box");
+  const scrollTarget = document.querySelector(".toc-end");
+  let scrolled = false
+  window.addEventListener("scroll", () => {
+    const needToScrolled = window.scrollY + tocBox.clientHeight >= scrollTarget.offsetTop - 5;
+    if (!scrolled && needToScrolled) {
+      tocBox.className = 'toc-box toc-scroll';
+      scrolled = true;
+    }
+    else if (scrolled && !needToScrolled) {
+      tocBox.className = 'toc-box toc-fix';
+      scrolled = false;
+    }
+  });
+</script>
+</body>
+
+<div class="footer box">
+  <div>
+    <div class="actions">
+      <span>© 2021
+          Ivan Tsai - <a href="/about ">About</a>&nbsp;
+          <a target="_blank" rel="noopener" href="https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/2018/05/10/smart-scale/" title="Login" external="false">Login</a></span>
+      <a class="material-icons rss" href="/feed.xml" target="_blank">
+        rss_feed
+      </a>
+    </div>
+    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+<script src="https://blog.cptsai.com/js/post-run.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js" async
+  onload="loadLozad()"></script>
+
+</html>
