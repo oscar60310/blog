@@ -3,7 +3,7 @@
     <div class="actions">
       <span>© <%- moment().format('YYYY') %>
           <%- config.author %> - <a href="<%- url_for('about') %> ">About</a>&nbsp;
-            <a href="https://api.cptsai.com/auth/login?redirect=<%- full_url_for(page.path) %>">Login</a></span>
+          <%- link_to('https://api.cptsai.com/auth/login?redirect='+full_url_for(page.path), 'Login', {external: false}) %></span>
       <a class="material-icons rss" href="<%- url_for('feed.xml') %>" target="_blank">
         rss_feed
       </a>
