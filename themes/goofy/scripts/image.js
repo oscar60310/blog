@@ -17,6 +17,7 @@ hexo.extend.tag.register("image", function (args) {
   const imageAttr = {
     alt: description || fileName,
     style: "",
+    "data-zoomable": "",
   };
   if (responsive) {
     imageAttr["class"] = "lozad";
