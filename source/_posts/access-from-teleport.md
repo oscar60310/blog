@@ -1,9 +1,10 @@
 ---
-title: 使用 Teleport 當作 Bastion Host 的心得
+title: Bastion Host - Teleport 介紹
 date: 2021-07-20 00:08:20
 categories: ["程式", "雲端"]
 tags: ["中篇","K8S","工具"]
 description: 最近公司內部使用 Teleport 作為 Bastion Host，使用起來非常方便，寫篇文章簡單介紹一下它。
+image: og-cover.png
 ---
 
 ## 什麼是堡壘機 Bastion Host
@@ -122,6 +123,10 @@ Database Access 的運作方式和 Kubernetes Access 類似，我們先使用 Te
 ## 結語
 
 Teleport 目前已經是一套蠻穩定的系統，所以要用在生產環境應該是沒有什麼問題，可以利用 SSO 登入並設定權限實在是很吸引人的功能，實測上 Server Access (SSH) 和 Kubernetes Access 都沒遇到什麼問題，但如果需要利用 Teleport 存取資料庫的話可能需要再研究或是等 Teleport 更成熟再考慮。 
+
+
+
+預覽圖 Photo by **[Syed Hasan Mehdi](https://www.pexels.com/@syed-hasan-mehdi-270838?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)** from **[Pexels](https://www.pexels.com/photo/derawar-fort-at-sunset-815880/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)**
 
 
 
