@@ -84,6 +84,8 @@ spec:
 
 雖然使用 SSH 完全沒有問題，但如果要使用 SSH Tunnel 連進 Databases 的話，可能會遇到 Key signing algorithm 不支援的問題，Teleport 只支援 SHA 格式，如果使用不支援 openssh SHA key type 的客戶端就會出問題，比如說 Dbeaver 使用的 [JSch](http://www.jcraft.com/jsch/)。
 
+Github 上已經有人提出支援更多 Key type 的 [Issue](https://github.com/gravitational/teleport/issues/3489) ，但目前為止 (2021/7) 還沒有實作。
+
 ### Kubernetes Access
 
 我們公司內部有多個 Kubernetes Clusters，對應到不同的還境，以往需要先 SSH 進去機器或把 Kubernetes API forward 出來才可以使用 Kubectl 等工具進行部署，Teleport 提供我們統一的介面來操作多個群集，只需要使用 CLI 登入到指定的群集後，Teleport 會自動更新 Kubeconfig，讓我們可以直接使用 Kubectl 等工具：
