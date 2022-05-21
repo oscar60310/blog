@@ -1,9 +1,10 @@
 ---
 title: IoC 在 TypeScript 中的實作
-date: 2022-05-21 13:25:56
+date: 2022-05-21 19:40:00
 categories: ["程式", "Design Pattern"]
 tags: ["中篇", "IoC", "TypeScript", "DI", "Design Pattern", "心得", "進階"]
 geo: ioc in ts
+description: 以一個有名的開源專案為例子，整理出幾個 IoC 不錯的用法，以及基本應該遵守的規則。
 image: og-cover.png
 ---
 
