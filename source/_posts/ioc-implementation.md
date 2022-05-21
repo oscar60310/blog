@@ -4,6 +4,7 @@ date: 2022-05-21 13:25:56
 categories: ["程式", "Design Pattern"]
 tags: ["中篇", "IoC", "TypeScript", "DI", "Design Pattern", "心得", "進階"]
 geo: ioc in ts
+image: og-cover.png
 ---
 
 最近為新專案導入 Inversion of Control (IoC) container，發現 Container Libraries 中，大部分都只有和自己相關的教學文件，比較少有實際實作的範例，這邊文章以一個有名的開源專案為例子，整理出幾個不錯的用法，以及基本應該遵守的規則。
