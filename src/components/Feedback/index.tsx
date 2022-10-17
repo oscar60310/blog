@@ -6,6 +6,15 @@ interface Props {
   path: string;
 }
 
+const vote = async (id: string, up: boolean) => {
+  await fetch(`https://api.cptsai.com/blog/feedback/vote/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      type: up ? "UP" : "DOWN",
+    }),
+  });
+};
+
 const useHash = (path: string) => {
   const [hash, setHash] = React.useState(null);
   if (!path.endsWith("/")) path += "/";
@@ -23,14 +32,29 @@ const useHash = (path: string) => {
 
 export default function Feedback(props: Props): JSX.Element | null {
   const hash = useHash(props.path);
-  console.log(hash);
+  const ready = hash !== null;
+  const [voted, setVoted] = React.useState(false);
+  const clickVote = (up: boolean) => {
+    setVoted(true);
+    vote(hash, up);
+  };
+
   return (
     <div className={styles.feedback}>
       <Icon className={styles.icon} />
       <div>這篇文章有幫助到您嗎?</div>
       <div className={styles["poll-options"]}>
-        <button>沒有</button>
-        <button>有</button>
+        {voted && <div>謝謝！</div>}
+        {!voted && (
+          <>
+            <button disabled={!ready} onClick={() => clickVote(false)}>
+              沒有
+            </button>
+            <button disabled={!ready} onClick={() => clickVote(true)}>
+              有
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

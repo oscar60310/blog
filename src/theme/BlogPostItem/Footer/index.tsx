@@ -9,7 +9,7 @@ import Feedback from "@site/src/components/Feedback";
 
 export default function BlogPostItemFooter(): JSX.Element | null {
   const { metadata, isBlogPostPage } = useBlogPost();
-  console.log(metadata);
+
   const { tags, title, editUrl, hasTruncateMarker, permalink } = metadata;
 
   // A post is truncated if it's in the "list view" and it has a truncate marker
