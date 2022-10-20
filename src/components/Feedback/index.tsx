@@ -44,20 +44,22 @@ const useHash = (path: string) => {
 const useVoteStatus = (path: string) => {
   const hash = useHash(path);
   const [status, setStatus] = React.useState(null);
-  if (hash) {
-    fetch(`https://api.cptsai.com/blog/feedback/vote/${hash}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const { voteType } = data;
-        setStatus(voteType || "N/A");
-      });
-  }
+  React.useEffect(() => {
+    if (hash) {
+      fetch(`https://api.cptsai.com/blog/feedback/vote/${hash}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const { voteType } = data;
+          setStatus(voteType || "N/A");
+        });
+    }
+  }, [hash]);
   return { hash, status, ready: hash !== null && status !== null };
 };
 
