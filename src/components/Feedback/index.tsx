@@ -105,7 +105,7 @@ function Feedback(props: Props): JSX.Element | null {
     setVoted(true);
     vote(hash, up);
   };
-  const canVote = ready && status !== "N/A";
+  const canVote = ready && status === "N/A";
   return (
     <div className={styles.feedback}>
       <Icon className={styles.icon} />
@@ -117,14 +117,14 @@ function Feedback(props: Props): JSX.Element | null {
             <button
               disabled={!canVote}
               onClick={() => clickVote(false)}
-              className={status === "DOWN" ? "selected" : ""}
+              className={status === "DOWN" ? styles.selected : ""}
             >
               沒有
             </button>
             <button
               disabled={!canVote}
               onClick={() => clickVote(true)}
-              className={status === "UP" ? "selected" : ""}
+              className={status === "UP" ? styles.selected : ""}
             >
               有
             </button>
