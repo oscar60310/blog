@@ -65,25 +65,8 @@ const useVoteStatus = (path: string) => {
 
 const useIsLogin = () => {
   const [isLogin, setIsLogin] = React.useState(null);
-  fetch(`https://api.cptsai.com/auth/me`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  })
-    .then((data) => data.json())
-    .then(({ login }) => {
-      setIsLogin(login);
-    });
-  return isLogin;
-};
-
-const useAnalysis = (id: string) => {
-  const isLogin = useIsLogin();
-  const [analysis, setAnalysis] = React.useState(null);
-  if (isLogin) {
-    fetch(`https://api.cptsai.com/blog/feedback/analysis/${id}`, {
+  React.useEffect(() => {
+    fetch(`https://api.cptsai.com/auth/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -91,8 +74,29 @@ const useAnalysis = (id: string) => {
       credentials: "include",
     })
       .then((data) => data.json())
-      .then((res) => setAnalysis(res));
-  }
+      .then(({ login }) => {
+        setIsLogin(login);
+      });
+  }, []);
+  return isLogin;
+};
+
+const useAnalysis = (id: string) => {
+  const isLogin = useIsLogin();
+  const [analysis, setAnalysis] = React.useState(null);
+  React.useEffect(() => {
+    if (isLogin) {
+      fetch(`https://api.cptsai.com/blog/feedback/analysis/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
+        .then((data) => data.json())
+        .then((res) => setAnalysis(res));
+    }
+  }, [isLogin]);
   return analysis;
 };
 
