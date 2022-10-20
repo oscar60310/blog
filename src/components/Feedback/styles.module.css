@@ -19,7 +19,7 @@
   height: 52px;
 }
 
-.poll-options > button {
+.not-selected {
   width: 100px;
   margin: 10px;
   font-size: 16px;
@@ -30,7 +30,7 @@
   cursor: pointer;
 }
 
-.poll-options > button:hover {
+.not-selected:hover {
   border-color: #2e9fff;
   background: rgba(204, 233, 255, 0.37);
   color: #2e87e7;

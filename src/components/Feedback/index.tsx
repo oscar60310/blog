@@ -19,6 +19,13 @@ const vote = async (id: string, up: boolean) => {
   });
 };
 
+const addView = async (id: string) => {
+  await fetch(`https://api.cptsai.com/blog/feedback/view/${id}`, {
+    method: "POST",
+    credentials: "include",
+  });
+};
+
 const useHash = (path: string) => {
   const [hash, setHash] = React.useState(null);
   if (!path.endsWith("/")) path += "/";
@@ -106,6 +113,11 @@ function Feedback(props: Props): JSX.Element | null {
     vote(hash, up);
   };
   const canVote = ready && status === "N/A";
+  React.useEffect(() => {
+    if (ready && hash) {
+      addView(hash);
+    }
+  }, [ready, hash]);
   return (
     <div className={styles.feedback}>
       <Icon className={styles.icon} />
@@ -117,14 +129,18 @@ function Feedback(props: Props): JSX.Element | null {
             <button
               disabled={!canVote}
               onClick={() => clickVote(false)}
-              className={status === "DOWN" ? styles.selected : ""}
+              className={
+                status === "DOWN" ? styles.selected : styles["not-selected"]
+              }
             >
               沒有
             </button>
             <button
               disabled={!canVote}
               onClick={() => clickVote(true)}
-              className={status === "UP" ? styles.selected : ""}
+              className={
+                status === "UP" ? styles.selected : styles["not-selected"]
+              }
             >
               有
             </button>
