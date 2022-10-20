@@ -16,6 +16,7 @@ const vote = async (id: string, up: boolean) => {
     body: JSON.stringify({
       type: up ? "UP" : "DOWN",
     }),
+    credentials: "include",
   });
 };
 
