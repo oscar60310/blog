@@ -34,7 +34,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/oscar60310/blog/tree/main/',
+            'https://github.com/oscar60310/blog/tree/master/',
           blogSidebarCount: 0
         },
         pages: {
