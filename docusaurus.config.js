@@ -34,11 +34,18 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/oscar60310/blog/tree/main/blog/',
+            'https://github.com/oscar60310/blog/tree/main/',
           blogSidebarCount: 0
+        },
+        pages: {
+          path: 'src/pages',
+          routeBasePath: '/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        gtag: {
+          trackingID: 'GTM-WNQNTJK'
         },
       }),
     ],
@@ -63,7 +70,16 @@ const config = {
       },
       footer: {
         style: 'dark',
-        links: [],
+        links: [{
+          label: 'About',
+          to: '/about',
+        }, {
+          label: 'Github',
+          to: 'https://github.com/oscar60310',
+        }, {
+          label: 'Login',
+          to: 'https://api.cptsai.com/auth/login?redirect=https://blog.cptsai.com/',
+        }],
         copyright: `Copyright © ${new Date().getFullYear()} Ivan Tsai. Built with Docusaurus.`,
       },
       prism: {
