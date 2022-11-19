@@ -93,6 +93,7 @@ const config = {
         apiKey: 'b9691868757887f71af2deb3aa42e255',
         indexName: 'content',
       },
+      metadata: [{ name: 'google-site-verification', content: 'wj7xFjz_WHvTZVJdCX66WW5O7t5AXSRvZ_7f9wHBnw8' }],
     }),
 
   plugins: [
