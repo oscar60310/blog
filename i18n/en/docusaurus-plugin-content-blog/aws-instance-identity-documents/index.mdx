@@ -1,0 +1,115 @@
+---
+title: AWS instance identity documents
+date: 2022-11-19 14:55:00
+tags: ["短篇", "AWS", "程式", "雲端"]
+description: AWS 提供了 instance identity documents API 來讓我們取得 EC2 的基本資訊，這篇文章會說明如何取得和驗證他們，並作為一種身分驗證的方法。
+authors: ivan
+slug: 2022/11/19/aws-instance-identity-documents
+---
+
+## Instance Metadata Service
+
+Instance metadata 是 AWS 對你的 EC2 提供的資訊，包含 Host Name, Public IP ... 等等的資訊都可以從 Metadata Service 獲取。每個 EC2 中都能存取到位於 `169.254.169.254` 的 API，這個位址是 [Link-local address](https://www.wikiwand.com/en/Link-local_address)，只有從 EC2 內部才可以存取的到。例如，我們可以由下面這個 API 獲得目前的 Public IP:
+
+```bash
+curl http://169.254.169.254/latest/meta-data/public-ipv4
+```
+
+<!--truncate-->
+
+## Instance identity documents
+
+Instace identity documents 是一種動態的 instance metadata，他會在每次機器啟動、重啟等等的狀況重新產生，它包含了很多重要的資訊：
+
+| 名稱                    | 描述                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| marketplaceProductCodes | AWS marketplace 提供的 product codes，可以驗證機器是否是由 AWS Marketplace 訂閱並啟動的。 |
+| imageId                 | 機器所使用的 AMI ID                                                                       |
+| instanceId              | EC2 instance id                                                                           |
+
+獲取的方式很簡單，一樣藉由 Metadata Service 就可以了:
+
+```bash
+curl -s http://169.254.169.254/latest/dynamic/instance-identity/document
+
+{
+  "accountId" : "xxxxxxx",
+  "architecture" : "x86_64",
+  "availabilityZone" : "ap-northeast-1d",
+  "billingProducts" : null,
+  "devpayProductCodes" : null,
+  "marketplaceProductCodes" : null,
+  "imageId" : "ami-xxxxx",
+  "instanceId" : "i-xxxxxx",
+  "instanceType" : "t3a.small",
+  "kernelId" : null,
+  "pendingTime" : "2022-10-15T13:45:28Z",
+  "privateIp" : "10.100.2.202",
+  "ramdiskId" : null,
+  "region" : "ap-northeast-1",
+  "version" : "2017-09-30"
+}
+```
+
+### 作為身分驗證的方法
+
+那 Instance identity 可以拿來做身分驗證 (Authentication) 嗎? 答案是可以的，Vault 就有提供類似的[驗證方法](https://developer.hashicorp.com/vault/docs/auth/aws#authorization-workflow)。
+
+不過，要進行身分驗證，可不是拿著上面的 JSON 資料就能算數，AWS 除了提供上面的資料以外，也會使用 AWS public certificate 做簽名，我們收到來自 EC2 Instace 送過來簽名過後的資料後，比對 AWS Public Key，這麼一來我們就能確定 Instance 的身分了。
+
+![Auto workflow with instance identity document](./auth-with-instance-id.png)
+
+### 驗證 Identity Document
+
+我們需要取得 AWS 的 Public Key，這把公鑰在各個 Region 是不同的，需要到[官方文件](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/verify-signature.html)中查看，之後只要對 Signature 做驗證就可以了，下面是以 NodeJS 做的簡單範例：
+
+```js
+const crypto = require("crypto");
+
+// Signature from http://169.254.169.254/latest/dynamic/instance-identity/signature
+const signature = Buffer.from(`MVIZxx....`, "base64");
+
+// Document from http://169.254.169.254/latest/dynamic/instance-identity/document
+const doc = Buffer.from(
+  `{
+  "accountId" : "xxxxxxx",
+  "architecture" : "x86_64",
+  "availabilityZone" : "ap-northeast-1d",
+  "billingProducts" : null,
+  "devpayProductCodes" : null,
+  "marketplaceProductCodes" : null,
+  "imageId" : "ami-xxxxx",
+  "instanceId" : "i-xxxxxxx",
+  "instanceType" : "t3a.small",
+  "kernelId" : null,
+  "pendingTime" : "2022-10-15T13:45:28Z",
+  "privateIp" : "10.100.2.202",
+  "ramdiskId" : null,
+  "region" : "ap-northeast-1",
+  "version" : "2017-09-30"
+}`,
+  "utf-8"
+);
+
+const result = crypto.verify(
+  "SHA256",
+  doc,
+  // AWS public key (Other AWS Regions)
+  `
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCHvRjf/0kStpJ248khtIaN8qkD
+N3tkw4VjvA9nvPl2anJO+eIBUqPfQG09kZlwpWpmyO8bGB2RWqWxCwuB/dcnIob6
+w420k9WY5C0IIGtDRNauN3kuvGXkw3HEnF0EjYr0pcyWUvByWY4KswZV42X7Y7XS
+S13hOIcL6NLA+H94/QIDAQAB
+-----END PUBLIC KEY-----
+`,
+  signature
+);
+
+console.log(result);
+```
+
+## References
+
+- [AWS - Instance identity documents](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html)
+- [Vault - AWS Auth Method](https://developer.hashicorp.com/vault/docs/auth/aws#authorization-workflow)

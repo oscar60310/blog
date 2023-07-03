@@ -2,6 +2,7 @@ import React from "react";
 import Icon from "@site/static/img/icon.svg";
 import styles from "./styles.module.css";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import Translate from "@docusaurus/Translate";
 
 interface Props {
   path: string;
@@ -128,9 +129,16 @@ function Feedback(props: Props): JSX.Element | null {
   return (
     <div className={styles.feedback}>
       <Icon className={styles.icon} />
-      <div>這篇文章有幫助到您嗎?</div>
+      <div>
+        <Translate id="feedback.question">這篇文章有幫助到您嗎?</Translate>
+      </div>
       <div className={styles["poll-options"]}>
-        {voted && <div>謝謝！</div>}
+        {voted && (
+          <div>
+            <Translate>謝謝</Translate>
+            <Translate>！</Translate>
+          </div>
+        )}
         {!voted && (
           <>
             <button
@@ -140,7 +148,7 @@ function Feedback(props: Props): JSX.Element | null {
                 status === "DOWN" ? styles.selected : styles["not-selected"]
               }
             >
-              沒有
+              <Translate id="feedback.itDoesNotHelp">沒有</Translate>
             </button>
             <button
               disabled={!canVote}
@@ -149,7 +157,7 @@ function Feedback(props: Props): JSX.Element | null {
                 status === "UP" ? styles.selected : styles["not-selected"]
               }
             >
-              有
+              <Translate id="feedback.itHelps">有</Translate>
             </button>
           </>
         )}

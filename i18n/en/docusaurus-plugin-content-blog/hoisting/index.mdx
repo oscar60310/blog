@@ -1,0 +1,88 @@
+---
+title: "JavaScript Hoisting"
+date: 2017-10-11 04:30:00 +0800
+tags: ["短篇", "程式", "javascrip"]
+slug: 2017/10/10/hoisting
+authors: ivan
+---
+
+在 JavaScript 中，會把變數定義的部分移到最前面執行，在 [W3C](https://www.w3schools.com/js/js_hoisting.asp) 中提到:
+
+> Hoisting is JavaScript's default behavior of moving declarations to the top.
+
+這個行為稱為 `Hoisting` (提升)
+
+<!-- truncate -->
+
+這項特色讓底下這段程式碼可以順利地執行 (在**嚴謹模式**下會編譯錯誤)
+
+```javascript
+x = 3;
+var x;
+console.log(x);
+// 3
+```
+
+_若使用 `let` 來宣告，則能避免重複宣告和提前使用的情形發生_
+
+```javascript
+var value = 2;
+
+test();
+
+function test() {
+  console.log(value);
+  var value = 3;
+}
+```
+
+上面這段程式會輸出 `undefined` ，因為宣告的部分會被提前到當前 [Scope](https://www.w3schools.com/js/js_scope.asp) 的最前面，可以想像成這樣
+
+```javascript
+var value = 2;
+
+test();
+
+function test() {
+  var value;
+  console.log(value);
+  value = 3;
+}
+```
+
+### Functions 宣告
+
+在宣告 function 的時候，會建議使用 **function declaration form** 來取代 function expressions，[stackoverflow](https://stackoverflow.com/questions/336859/var-functionname-function-vs-function-functionname)，也是因為 hoising 的原因。
+
+```javascript
+sum(1, 1); // <- Error
+var sum = function (x, y) {
+  return x + y;
+};
+```
+
+上面這段程式宣告部分會被提前，但到第 2 行才會被定義，所以第 1 行是沒有辦法使用的，改成下面這樣 function declaration 會整個被提前，所以在同一個 Scope 中任何地方呼叫都沒有問題
+
+```javascript
+sum(1, 1); // 2
+function sum(x, y) {
+  return x + y;
+}
+```
+
+但若是在不同 scope 結果就不同了，原理和上面一樣，宣告部分只會被提升到同一個 Scope 的最頂端
+
+```javascript
+console.log(sum(1, 1)); //Error
+if (true) {
+  function sum(x, y) {
+    return x + y;
+  }
+}
+```
+
+### 參考資料
+
+- [MDN 提升](https://developer.mozilla.org/zh-TW/docs/Glossary/Hoisting)
+- [Variable Hoisting - by buildfirst](https://github.com/buildfirst/buildfirst/tree/master/ch05/04_hoisting)
+- [筆記 談談 Javascript 中的 Hoisting](https://pjchender.blogspot.tw/2015/12/javascript-hoisting.html)

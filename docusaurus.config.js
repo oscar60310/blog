@@ -18,8 +18,8 @@ const config = {
   // metadata like html lang. For example, if your site is Chinese, you may want
   // to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: "en",
-    locales: ["en"],
+    defaultLocale: "zh-Hant",
+    locales: ["zh-Hant", "en"],
   },
 
   presets: [
@@ -35,6 +35,7 @@ const config = {
           // Remove this to remove the "edit this page" links.
           editUrl: "https://github.com/oscar60310/blog/tree/master/",
           blogSidebarCount: 0,
+          editLocalizedFiles: true,
         },
         pages: {
           path: "src/pages",
@@ -60,6 +61,10 @@ const config = {
           src: "img/icon.svg",
         },
         items: [
+          {
+            type: "localeDropdown",
+            position: "right",
+          },
           {
             href: "https://github.com/oscar60310",
             label: "GitHub",
