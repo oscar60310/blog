@@ -1,34 +1,34 @@
 ---
-title: 中繼憑證設定遺失問題
+title: Issues with missing intermediate certificates
 date: 2021-05-04 23:07:05
-tags: ["短篇", "程式", "雲端"]
-description: 簡單解釋中繼憑證以及未正確設定時會發生的問題。
+tags: ["Short Reads", "Programming", "Cloud"]
+description: A simple explanation of intermediate certificates and the problems that occur when they are not correctly configured.
 authors: ivan
 slug: 2021/05/04/cert-chain-missing
 ---
 
-### 甚麼是中繼憑證
+### What are Intermediate Certificates
 
-一般來說，證書頒發機構 (certificate authority, CA) 不會用真正的根憑證 (Root Certificate) 來簽發給使用者的憑證，畢竟終端使用者這麼多，放在線上每天簽屬風險太大。相對的，CA 會使用根憑證先簽發一張憑證，再用這張憑證來簽發給大家的憑證，這張憑證就稱為「中繼憑證」(或中間憑證，Intermediate Certificate)。
+Generally, a certificate authority (CA) does not issue user certificates using the actual root certificate. After all, there are so many end users, and having the root certificate online every day poses a significant risk. Instead, the CA issues a certificate using the root certificate and then uses that certificate to sign user certificates. This certificate is called an "intermediate certificate."
 
 <!--truncate-->
 
-比如說著名的 Let's Encrypt，目前 (2021 五月) 使用的根憑證是 DST Root CA X3，用來簽發的憑證則是 R3：
+For example, Let's Encrypt, a well-known CA, currently (May 2021) uses the DST Root CA X3 root certificate and the R3 certificate for signing:
 
 <figure>
 
 ![Let's encrypt chain of trust](./let-encrypt-certs.png)
 
-<figcaption>Let's Encrypt 憑證，圖片來自 https://letsencrypt.org/certificates/</figcaption>
+<figcaption>Let's Encrypt certificates, image from https://letsencrypt.org/certificates/</figcaption>
 </figure>
 
-使用他們簽出來憑證的網站路徑會長得像這樣：
+The path of certificates issued by them looks like this:
 
 ![Let's encrypt R3 paths](./lets-encrypt-path.png)
 
-在我們申請憑證通過驗證後，機構會給我們憑證 (certificate.crt)，通常也會附上 CA Bundle File (ca_bundle.crt)，ca_bundle.crt 包含根憑證和中繼憑證，而 certificate.crt 會包含伺服器憑證和中繼憑證。
+After we successfully apply for a certificate and pass the verification, the organization provides us with a certificate (certificate.crt), usually accompanied by a CA Bundle File (ca_bundle.crt). The ca_bundle.crt includes the root certificate and the intermediate certificate, while the certificate.crt contains the server certificate and the intermediate certificate.
 
-使用 openssl 檢查會發現只有 certificate.crt 是不夠的，必須配合 CA Bundle File。
+Using OpenSSL for verification, we find that having only the certificate.crt is not enough; it must be accompanied by the CA Bundle File.
 
 ```bash
 $ openssl verify ca_bundle.pem
@@ -41,21 +41,21 @@ $ openssl verify -CAfile ca_bundle.crt certificate.crt
 certificate.crt: OK
 ```
 
-不同的伺服器需要不同的設定來完整 Cert Chain，以 Nginx 來說，他要求我們把 ca bundle 和 certificate 合併到一個檔案：
+Different servers require different configurations to complete the certificate chain. For Nginx, for example, it requires us to combine the CA bundle and the certificate into one file:
 
 ```bash
 $ cat certificate.crt bundle.crt > chained.crt
 ```
 
-http://nginx.org/en/docs/http/configuring_https_servers.html#chains
+Refer to http://nginx.org/en/docs/http/configuring_https_servers.html#chains for more information.
 
-把合併好的檔案放到伺服器上就沒問題了。
+Once the merged file is placed on the server, everything will work fine.
 
-### 中繼憑證未設定時會發生什麼
+### What Happens When Intermediate Certificates are Not Configured
 
 https://incomplete-chain.badssl.com/
 
-這是一個中繼憑證未設定完整的網站 (只放 certificate.crt)，大家應該會發現大部分瀏覽器可以正常開啟，但使用 curl 等指令時就會得到錯誤。
+This is a website with incomplete intermediate certificate configuration (only certificate.crt is provided). Most browsers can still open it without any issues, but when using commands like curl, errors will occur.
 
 ```bash
 curl https://incomplete-chain.badssl.com/
@@ -67,11 +67,11 @@ establish a secure connection to it. To learn more about this situation and
 how to fix it, please visit the web page mentioned above.
 ```
 
-這是因為主流瀏覽器像是 Chrome 會自動下載中繼憑證 ([AIA](https://tools.ietf.org/html/rfc3280#section-4.2.2.1) Fetching)，而 curl 不會，這也是很多人會忽略中繼憑證設定的原因，憑證放好，瀏覽器打開發現沒問題，就收工了 😂
+This is because mainstream browsers like Chrome automatically download intermediate certificates (AIA Fetching), while curl does not. This is also why many people overlook the configuration of intermediate certificates. They think that if the certificate works fine when opened in a browser, then the job is done 😂
 
-### 線上檢查
+### Online Checking
 
-我們可以利用 [What's My Chain Cert?](https://whatsmychaincert.com/?incomplete-chain.badssl.com) 來協助檢查伺服器設定，只需要輸入主機 Host，就可以知道有沒有正確設定，如果不正確還可以直接下載正確的設定來用 (不過我建議還是自己去 CA 官網找比較保險)。
+We can use [What's My Chain Cert?](https://whatsmychaincert.com/?incomplete-chain.badssl.com) to help check server configurations. Just enter the host of the server, and you can find out if it is configured correctly. If it's not, you can even download the correct configuration directly (although I recommend checking the CA's official website for a more reliable source).
 
 ### References
 
