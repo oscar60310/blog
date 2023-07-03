@@ -32,6 +32,9 @@ const useHash = (path: string) => {
   const [hash, setHash] = React.useState(null);
   if (!path.endsWith("/")) path += "/";
   if (path.startsWith("/")) path = path.slice(1);
+  if (path.startsWith("en")) path = path.slice(2);
+  if (path.startsWith("/")) path = path.slice(1);
+
   const textAsBuffer = new TextEncoder().encode(path);
   window.crypto.subtle.digest("SHA-256", textAsBuffer).then((hashBuffer) => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
