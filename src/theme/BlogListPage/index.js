@@ -14,7 +14,7 @@ function BlogListPageMetadata(props) {
   const { metadata } = props;
   const { blogDescription, blogTitle, permalink } = metadata;
   const isBlogOnlyMode = permalink === "/";
-  console.log(isBlogOnlyMode);
+
   const title = isBlogOnlyMode ? null : blogTitle;
   return (
     <>

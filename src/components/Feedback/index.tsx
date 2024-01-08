@@ -22,10 +22,12 @@ const vote = async (id: string, up: boolean) => {
 };
 
 const addView = async (id: string) => {
-  await fetch(`https://api.cptsai.com/blog/feedback/view/${id}`, {
-    method: "POST",
-    credentials: "include",
-  });
+  try {
+    await fetch(`https://api.cptsai.com/blog/feedback/view/${id}`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {}
 };
 
 const useHash = (path: string) => {
@@ -62,6 +64,9 @@ const useVoteStatus = (path: string) => {
         .then((data) => {
           const { voteType } = data;
           setStatus(voteType || "N/A");
+        })
+        .catch(() => {
+          setStatus("N/A");
         });
     }
   }, [hash]);
@@ -81,6 +86,9 @@ const useIsLogin = () => {
       .then((data) => data.json())
       .then(({ login }) => {
         setIsLogin(login);
+      })
+      .catch(() => {
+        setIsLogin(false);
       });
   }, []);
   return isLogin;
@@ -99,7 +107,8 @@ const useAnalysis = (id: string) => {
         credentials: "include",
       })
         .then((data) => data.json())
-        .then((res) => setAnalysis(res));
+        .then((res) => setAnalysis(res))
+        .catch(() => {});
     }
   }, [isLogin]);
   return analysis;
