@@ -1,5 +1,6 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
+import 'dotenv/config';
 
 const { themes } = require('prism-react-renderer');
 const lightCodeTheme = themes.github;
@@ -122,6 +123,10 @@ const config = {
       },
     ],
   ],
+
+  customFields: {
+    maptilerKey: process.env.MAP_TILER_KEY || '',
+  },
 };
 
 module.exports = config;
