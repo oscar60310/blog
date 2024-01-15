@@ -134,7 +134,7 @@ function Feedback(props: Props): JSX.Element | null {
   };
   const canVote = ready && status === "N/A";
   React.useEffect(() => {
-    if (ready && hash) {
+    if (ready && hash && process.env.NODE_ENV === "production") {
       addView(hash);
     }
   }, [ready, hash]);

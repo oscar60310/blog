@@ -6,6 +6,7 @@ import TagsListInline from "@theme/TagsListInline";
 import ReadMoreLink from "@theme/BlogPostItem/Footer/ReadMoreLink";
 import styles from "./styles.module.css";
 import Feedback from "@site/src/components/Feedback";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function BlogPostItemFooter(): JSX.Element | null {
   const { metadata, isBlogPostPage } = useBlogPost();
@@ -31,6 +32,7 @@ export default function BlogPostItemFooter(): JSX.Element | null {
       )}
     >
       {isBlogPostPage && <Feedback path={permalink} />}
+      {isBlogPostPage && process.env.NODE_ENV === "production" && <Analytics />}
 
       {tagsExists && (
         <div className={clsx("col", { "col--9": truncatedPost })}>
