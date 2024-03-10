@@ -19,6 +19,7 @@ const vote = async (id: string, up: boolean) => {
     }),
     credentials: "include",
   });
+  window["umami"]?.track(up ? "USEFUL" : "NOT USEFUL", { pageId: id });
 };
 
 const addView = async (id: string) => {
