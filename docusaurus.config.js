@@ -127,6 +127,14 @@ const config = {
   customFields: {
     maptilerKey: process.env.MAP_TILER_KEY || '',
   },
+
+  scripts: [
+    {
+      src: "https://umami.cptsai.com/5e69de98-2470-46f8-856d-29de43493460.js",
+      async: true,
+      'data-website-id': "2d94bbab-d0e1-4d61-b278-ff9abc5ef3f1"
+    }
+  ]
 };
 
 module.exports = config;
