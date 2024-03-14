@@ -1,7 +1,7 @@
 ---
 title: Kubernetes 上的 ExternalTrafficPolicy
 date: 2020-11-15 20:45:00
-categories: ["K8S", "長篇", "進階", "Azure", "程式", "雲端"]
+tags: ["K8S", "長篇", "進階", "Azure", "程式", "雲端"]
 description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
 image: ./og-cover.png
 slug: 2020/11/15/k8s-external-traffic-policy
@@ -14,7 +14,7 @@ authors: ivan
 
 經果一番探索後，發現和 Kube-proxy 如何處理進進站流量有關，也算是解答了我對 Service 實作的問題，這篇文章來記錄一下研究成果 🎉
 
-<!--truncate-->
+{/* truncate */}
 
 ## Kube Proxy
 
@@ -132,7 +132,7 @@ KUBE-MARK-MASQ  all  --  10.244.2.6           0.0.0.0/0            /* default/te
 DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.6:8080
 ```
 
-前半段和 ClusterIP 很像，只不過多了一層 KUBE-NODEPORTS Chain，一樣做後會經由 DNAT 到 Pod。
+前半段和 ClusterIP 很像，只不過多了一層 KUBE-NODEPORTS Chain，一樣最後會經由 DNAT 到 Pod。
 
 特別的是在 KUBE-NODEPORTS 中多了一個 KUBE-MARK-MASQ：
 

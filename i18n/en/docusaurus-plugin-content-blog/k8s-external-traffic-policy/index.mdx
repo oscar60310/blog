@@ -1,37 +1,36 @@
 ---
-title: Kubernetes 上的 ExternalTrafficPolicy
+title: ExternalTrafficPolicy of Kubernetes
 date: 2020-11-15 20:45:00
-categories: ["K8S", "長篇", "進階", "Azure", "程式", "雲端"]
-description: "在 Kubernetes 中 Pod 接收到的流量來源 IP 通常會是內部 (Node) IP，若想保留原始的來源位址的話必需修改 Service ，這篇文章粗略的介紹 kube proxy 如何處理流量以及說明 ExternalTrafficPolicy 的不同模式"
+tags: ["K8S", "Long Reads", "Advanced", "Azure", "Programming", "Cloud"]
+description: "In Kubernetes, the source IP address that a Pod receives traffic from typically appears as the internal (Node) IP address. If you want to preserve the original source address, you need to modify the Service. This article provides a rough overview of how kube-proxy handles traffic and explains the different modes of ExternalTrafficPolicy."
 image: ./og-cover.png
 slug: 2020/11/15/k8s-external-traffic-policy
 authors: ivan
 ---
 
-## 前言
+## Introduction
 
-最近公司改用 [Nginx ingress controller](https://kubernetes.github.io/ingress-nginx/) 配合一個 L4 Load Balancer 來處理進站流量，取代過去使用 [Application Gateway](https://azure.microsoft.com/en-us/services/application-gateway/)，在部屬時發現官方預設在 Service 上設定 ExternalTrafficPolicy = Local ([Ingress-nginx Azure deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.2/deploy/static/provider/cloud/deploy.yaml))，[AKS 文件](https://docs.microsoft.com/en-us/azure/aks/load-balancer-standard#maintain-the-clients-ip-on-inbound-connections)上也提到如果想保留客戶端來源 IP 的話，必須要這樣設定。
+Recently, our company switched to using [Nginx ingress controller](https://kubernetes.github.io/ingress-nginx/) with a L4 Load Balancer to handle incoming traffic, replacing the previous use of [Application Gateway](https://azure.microsoft.com/en-us/services/application-gateway/). During deployment, I discovered that the official default setting for ExternalTrafficPolicy on the Service is set to Local ([Ingress-nginx Azure deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.41.2/deploy/static/provider/cloud/deploy.yaml)), as mentioned in the [AKS documentation](https://docs.microsoft.com/en-us/azure/aks/load-balancer-standard#maintain-the-clients-ip-on-inbound-connections). It was also noted that if we want to preserve the client's source IP address, this configuration is necessary.
 
-經果一番探索後，發現和 Kube-proxy 如何處理進進站流量有關，也算是解答了我對 Service 實作的問題，這篇文章來記錄一下研究成果 🎉
+After some exploration, it was found that this is related to how Kube-proxy handles incoming traffic, which helped address the implementation issues I had with K8S Service. This article aims to document my findings. 🎉
 
-<!--truncate-->
+{/* truncate */}
 
 ## Kube Proxy
 
-[kube-proxy](https://kubernetes.io/docs/concepts/overview/components/#kube-proxy) 運行在每一個 Node 上，負責實作 Service，依照不同的 Mode 有不同的行為：
+[kube-proxy](https://kubernetes.io/docs/concepts/overview/components/#kube-proxy) runs on every Node and is responsible for implementing Service functionality. It behaves differently depending on the mode:
 
-在 Mode 為 iptables 設定下，Kube Proxy 會 Watch API Server 並修改 Node 上的 iptables 來達到封包轉發的目的，也就是因為他只負責修改設定，實際上是由 Linux Core 來處理封包的關係，效能比 userspace mode 好上許多。
+In iptables mode, kube-proxy watches the API server and modifies iptables on the Node to achieve packet forwarding. Because it only modifies configurations and relies on the Linux Core to handle packets, its performance is significantly better than in userspace mode.
 
 :::info
-Kube-proxy 部分可以參考 [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0#kube-proxy) 的說明文件。
-
+For more information about kube-proxy, refer to the documentation on [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0#kube-proxy).
 :::
 
-接下來我們來看看 kube-proxy 在不同型態的 Service 建立時會做哪些動作：
+Next, let's see what actions kube-proxy takes when different types of Services are created:
 
 ### Cluster IP
 
-在 Service type = ClusterIP 時，內部可以藉由 Service DNS 或 IP 存取到對應的 Pod，例如：
+When the Service type is ClusterIP, internal access to the corresponding Pod can be achieved either through Service DNS or IP. For example:
 
 ```yaml
 apiVersion: v1
@@ -50,7 +49,7 @@ spec:
 
 ![](./cluster-ip-svc.png)
 
-kube-proxy 會建立像這樣的 iptables：
+kube-proxy will create iptables rules like this:
 
 ```bash
 KUBE-SVC-IOIC7CRUMQYLZ32S  tcp  --  0.0.0.0/0            10.109.69.11         /* default/test: cluster IP */ tcp dpt:8080
@@ -71,19 +70,19 @@ KUBE-MARK-MASQ  all  --  10.244.2.2           0.0.0.0/0            /* default/te
 DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.2:8080
 ```
 
-當我們從 Cluster 內部向 Service (10.109.69.11:8080) 發送資料時，會進入 KUBE-SVC-IOIC7CRUMQYLZ32S Chain ，接著有 50% 機率進 KUBE-SEP-DZ6OGOAFZ2YMFV35 和 KUBE-SEP-PHU2ZXK3DXEO46Q2 (假設後端有兩個 Pod) ，最後經由 DNAT 進入到真正的 Pod IP。
+When we send data from within the Cluster to the Service (10.109.69.11:8080), it enters the KUBE-SVC-IOIC7CRUMQYLZ32S chain. Then, there is a 50% chance of entering either KUBE-SEP-DZ6OGOAFZ2YMFV35 or KUBE-SEP-PHU2ZXK3DXEO46Q2 (assuming there are two backend Pods). Finally, it goes through DNAT to reach the actual Pod IP.
 
-這種狀況如果不是自己打自己的話就不會被標記為需要 SNAT，Application 端看到的就會是原始的 Pod IP，這種情況簡單很多。
+In this scenario, if it's not a loopback connection, it won't be marked as needing SNAT. Therefore, the application will see the original Pod IP, making the situation much simpler.
 
-### 由外部 NodePort 進入
+### From External NodePort
 
-這裡我們討論兩種 Policy，分別是 ExternalTrafficPolicy 為 Cluster (預設) 和 Local。
+Here, we discuss two policies: ExternalTrafficPolicy set to Cluster (default) and Local.
 
-假設我們有 3 個 Node (Node1, Node2, Node3) 和兩個 Pod (Pod1, Pod2)，Pod1 跑在 Node1、Pod2 跑在 Node2。
+Let's assume we have 3 Nodes (Node1, Node2, Node3) and two Pods (Pod1, Pod2), where Pod1 runs on Node1 and Pod2 runs on Node2.
 
 #### ExternalTrafficPolicy = Cluster
 
-這是預設的 Policy，建立完成後我們可以從 NodePort 存取 Service：
+This is the default policy. Once established, we can access the Service via NodePort:
 
 ```yaml
 apiVersion: v1
@@ -104,7 +103,7 @@ spec:
 
 ![](./node-port-cluster.png)
 
-這時候我們可以從所有的 Node 上 Port 30000 和 Pod 溝通，就算 Pod 不是跑在該 Node 上也沒問題，我們先來看看 iptables：
+At this point, we can communicate with Pods from all Nodes on port 30000, even if the Pod is not running on that particular Node. Let's take a look at the iptables:
 
 ```bash
 Chain KUBE-SERVICES (2 references)
@@ -132,9 +131,9 @@ KUBE-MARK-MASQ  all  --  10.244.2.6           0.0.0.0/0            /* default/te
 DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.2.6:8080
 ```
 
-前半段和 ClusterIP 很像，只不過多了一層 KUBE-NODEPORTS Chain，一樣做後會經由 DNAT 到 Pod。
+The first part is similar to ClusterIP, except for an additional layer of KUBE-NODEPORTS Chain, ultimately leading to DNAT to the Pod.
 
-特別的是在 KUBE-NODEPORTS 中多了一個 KUBE-MARK-MASQ：
+What's special is the addition of KUBE-MARK-MASQ within KUBE-NODEPORTS:
 
 ```bash
 Chain KUBE-MARK-MASQ (15 references)
@@ -142,7 +141,7 @@ target     prot opt source               destination
 MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000
 ```
 
-最後在 POSTROUTING 階段，有 MARK 的會經由 MASQUERADE 模組修改來源 IP：
+Finally, in the POSTROUTING stage, packets marked with MARK will have their source IP modified via the MASQUERADE module:
 
 ```bash
 Chain POSTROUTING (policy ACCEPT)
@@ -154,9 +153,9 @@ target     prot opt source               destination
 MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000 random-fully
 ```
 
-也就是因為最後這個階段修改了 Source IP，Application 端看到的會是 Node IP，而不是原始的來源，文章後面會說明為什麼需要 SNAT。
+Because of this modification in the last stage, the Application will see the Node IP instead of the original source. The need for SNAT will be explained later in the article.
 
-這個模式以圖解的方式大概會長這樣：
+This mode would roughly look like this in a graphical representation:
 
 <figure>
 
@@ -165,11 +164,11 @@ MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes ser
 <figcaption>NodePort with ExternalTrafficPolicy = cluster</figcaption>
 </figure>
 
-完整的 iptables 資料請見 [node-port-cluster-iptables-nat.txt](./node-port-cluster-iptables-nat.txt)。
+For the complete iptables data, please refer to [node-port-cluster-iptables-nat.txt](./node-port-cluster-iptables-nat.txt).
 
 #### ExternalTrafficPolicy = Local
 
-只要將 Service 的 externalTrafficPolicy 設定為 `Local` 即可，此時只能從有目標 Pod 的 Node 來存取 Service：
+Simply set the Service's externalTrafficPolicy to `Local`. In this case, the Service can only be accessed from the Node where the targeted Pod resides.
 
 ```yaml
 apiVersion: v1
@@ -190,9 +189,9 @@ spec:
 
 ![](./node-port-local.png)
 
-這時候我們只能從 Node1 和 Node2 的 Port 30000 存取到 Pod，Node3 因為沒有 Pod 跑在上面，所以無法連線到 Pod。
+At this point, we can only access the Pod from Port 30000 on Node1 and Node2. Node3, having no Pods running on it, cannot establish a connection to the Pod.
 
-我們先來看看 Node1 (有 Pod) 的 iptables，差異只有在 KUBE-NODEPORTS Chain 之後：
+Let's first take a look at the iptables on Node1 (with Pod). The difference lies only after the KUBE-NODEPORTS Chain:
 
 ```bash
 Chain KUBE-NODEPORTS (1 references)
@@ -223,22 +222,22 @@ KUBE-MARK-MASQ  all  --  10.244.1.10          0.0.0.0/0            /* default/te
 DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/test: */ tcp to:10.244.1.10:8080
 ```
 
-當由 Node1 外部 30000 Port 進入時，會經過
+When traffic enters from Node1's external port 30000, it goes through:
 
 1. KUBE-NODEPORTS
 2. KUBE-XLB-IOIC7CRUMQYLZ32S (line 4)
 3. KUBE-SEP-SXLTLNYANJJ3YTT4 (line 11)
 
-直接到 Pod IP，此時只有一個 Pod，另一個 Pod 因為跑在 Node2 的關係所以經由 Node1 是存取不到的。
+Directly to the Pod IP. At this point, there's only one Pod. The other Pod, running on Node2, cannot be accessed through Node1.
 
-過程中不會被 MARK，也就不會有 SNAT 發生，Application 端看到的就會是原始的 IP 了，這也就是為什麼當想保留 Client 端 IP 時必須要設定為 Local 的原因。
+During this process, there's no MARK, so no SNAT occurs. The applications will see the original IP. This explains why setting the policy to Local is necessary when you want to preserve the client's IP.
 
 :::info
-當從 Node1 內部打 Port 30000 時，會照正常的流程走，如同 Policy = Cluster 一樣。
+When accessing port 30000 internally from Node1, it follows the normal flow, similar to when the policy is set to Cluster.
 
 :::
 
-在 Node3 中的 iptables 則會把外部 Port 30000 的所有封包丟棄，因為沒有 Pod 跑在該 Node，內部要求一樣不受影響。
+In the iptables on Node3, all packets from external port 30000 are discarded because there are no Pods running on that Node. Internal requests remain unaffected.
 
 ```bash
 Chain KUBE-XLB-IOIC7CRUMQYLZ32S (1 references)
@@ -249,7 +248,7 @@ KUBE-SVC-IOIC7CRUMQYLZ32S  all  --  0.0.0.0/0            0.0.0.0/0            /*
 KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/test: has no local endpoints */
 ```
 
-這個模式以圖解的方式大概會長這樣：
+This mode would roughly look like this in a graphical representation:
 
 <figure>
 
@@ -258,11 +257,11 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 <figcaption>NodePort with ExternalTrafficPolicy = local</figcaption>
 </figure>
 
-完整的 iptables 資料請見 [node-port-local-has-no-pod-iptables-nat.txt](./node-port-local-has-no-pod-iptables-nat.txt) (Node3) 與 [node-port-local-has-pod-iptables-nat.txt](./node-port-local-has-pod-iptables-nat.txt) (Node1)。
+For the complete iptables data, please refer to [node-port-local-has-no-pod-iptables-nat.txt](./node-port-local-has-no-pod-iptables-nat.txt) (Node3) and [node-port-local-has-pod-iptables-nat.txt](./node-port-local-has-pod-iptables-nat.txt) (Node1)。
 
-## 為什麼需要 SNAT
+## Why do we need SNAT?
 
-當設定 ExternalTrafficPolicy 為 Cluster 時，會在 Node 上經過一次的 SNAT 然後才到達 Pod，所以我們在 Pod 上看到的來源 IP 永遠會是 Node IP，那 Kube Proxy 為甚麼要這樣做呢，我們來看看如果沒有 NAT 的話會發生什麼事情，為了簡化我們把 Node2 移除，假設客戶端從 Node3 想要存取服務：
+When setting ExternalTrafficPolicy to Cluster, traffic undergoes SNAT on the Node before reaching the Pod. Therefore, the source IP seen on the Pod will always be the Node IP. But why does Kube Proxy do this? Let's see what would happen without NAT. For simplicity, let's remove Node2 and assume the client wants to access the service from Node3:
 
 <figure>
 
@@ -271,12 +270,12 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 <figcaption>Routing without SNAT at arrival node</figcaption>
 </figure>
 
-1. 首先 Client 向 Node3 (假設這個 Node 沒有 Pod 跑在上面) 發送要求。
-2. Node3 將封包轉向 Pod IP (只有 DNAT)。
-3. Pod 回應。
-4. Node1 將封包轉向 Client。
+1. The client sends a request to Node3 (assuming there are no Pods running on this Node).
+2. Node3 forwards the packet to the Pod IP (only DNAT).
+3. The Pod responds.
+4. Node1 forwards the packet to the client.
 
-這張圖可以很明顯的看出來，Client 向 Node3 發送要求，卻收到 Node1 的回應，在大多數情況這樣是行不通的，甚至在防火牆就會被擋掉。所以 Kube Proxy 才會讓 Pod 先回傳給原始的 Node，再由 Node 負責回應：
+From this illustration, it's clear that although the client sends a request to Node3, it receives a response from Node1. In most cases, this wouldn't work, and the firewall might block it. That's why Kube Proxy makes the Pod respond to the original Node, which is responsible for responding:
 
 <figure>
 
@@ -285,26 +284,26 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 <figcaption>Routing with SNAT at arrival node</figcaption>
 </figure>
 
-雖然會產生額外的步驟，但也只有這樣能確保路由順暢。
+Though this introduces extra steps, it ensures smooth routing.
 
 ## Load balancer
 
-那當 Service Type 為 LoadBalancer 時，雲端環境又是怎麼處理的呢？
+Now, what happens in a cloud environment when the Service type is LoadBalancer?
 
-以 AKS (Azure) 為例，除了指定 NodePort 並將所有的 Node 加入 LB 的 Backend pools 之外，還會設定 `healthCheckNodePort`，這會讓 K8S 在這個 Port 上開啟額外的 Health Check EndPoint，我們可以透過這個 API 來檢查該 Node 是不是有目標 Pod 在執行，進而控制 LB 要不要把流量往這個 Node 送，這麼一來就可以避免像上圖 Node3 一樣，沒有 EndPoint 的情況發生了。
+Taking AKS (Azure Kubernetes Service) as an example, besides specifying NodePort and adding all Nodes to the LB's Backend pools, a `healthCheckNodePort` is set. This enables Kubernetes to open an additional Health Check Endpoint on this port. We can use this API to check if the Node has the targeted Pod running and control whether the LB should send traffic to this Node. This prevents situations like Node3 in the previous example, where there's no Endpoint.
 
 <figure>
 
 ![](./azure-lb-health-probes.png)
 
-<figcaption>Azure LB health probes 設定</figcaption>
+<figcaption>Azure LB health probes configuration</figcaption>
 </figure>
 
-## 不平衡問題
+## Imbalance
 
-最後我們來討論一下除了需要額外判斷 Node 狀態外，使用 Local Policy 會面臨的最大問題: `imbalance` 。一般來說我們的群集外部會有一個 Load Balancer 來將流量平均分配至所有的 Node 上，假設我們有兩個 Node (Node1, Node2)，總共執行三個 Pod，在 Node1 上有一個，在 Node2 則有兩個。
+Lastly, let's discuss the biggest challenge faced with using the Local Policy: `imbalance`. Typically, external traffic is evenly distributed across all Nodes by a Load Balancer. Suppose we have two Nodes (Node1, Node2) running a total of three Pods, with one on Node1 and two on Node2.
 
-當使用預設設定時，情況應該會如下圖：
+With the default settings, the situation should look like this:
 
 <figure>
 
@@ -313,7 +312,7 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 <figcaption>Azure LB Network weight in Cluster Policy</figcaption>
 </figure>
 
-最後每個 Pod 很平均的獲得 33% 的流量，那如果是 Local Policy 呢？
+Each Pod receives an even 33% of traffic. But what about with the Local Policy?
 
 <figure>
 
@@ -322,15 +321,15 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 <figcaption>Network weight in Local Policy</figcaption>
 </figure>
 
-因為 LB 對每個 Node 的權重是一樣的，所以最後 Pod1 會有 50% 的流量，而其他兩個只會有 25%，這就是所謂的負載不平衡的問題。
+Since the LB weight for each Node is the same, Pod1 ends up with 50% of the traffic, while the other two only receive 25%. This is what's known as the imbalance issue.
 
-這個問題可以藉由 Pod Affinity 來解決，確保每個 Node 上 Pod 數量是相同的就可以了。
+This problem can be addressed by using Pod Affinity to ensure an equal number of Pods on each Node.
 
-## 總結
+## Conclusion
 
-有關 External Traffic Policy 的探討就到這邊了，我也沒想到小小一個屬性牽涉到這麼複雜的問題，感謝前輩們的努力上我們只需要一行設定解決一切 💗
+That's all for the discussion on External Traffic Policy. I didn't expect such complexity from a single attribute, but thanks to the efforts of predecessors, we can solve everything with just one configuration line 💗
 
-若您對文章任何內容有疑慮歡迎在下方留言或直接在 Github 上開 Issue，非常感謝！
+If you have any concerns about the article, feel free to leave a comment below or open an issue on GitHub. Thank you very much!
 
 ## References
 
@@ -340,4 +339,4 @@ KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0            /* default/te
 - [kubernetes 的 Kube-proxy 的 iptables 转发规则](https://blog.csdn.net/qq_36183935/article/details/90734847)
 - [GKE - Network overview](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview?authuser=0)
 
-預覽圖 - Photo by **[Brett Sayles](https://www.pexels.com/@brett-sayles?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)** from **[Pexels](https://www.pexels.com/photo/routers-with-cables-2425567/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)**
+Preview image - Photo by **[Brett Sayles](https://www.pexels.com/@brett-sayles?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)** from **[Pexels](https://www.pexels.com/photo/routers-with-cables-2425567/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels)**
