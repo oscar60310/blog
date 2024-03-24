@@ -1,0 +1,46 @@
+---
+title: PostgreSQL 中的諮詢鎖
+date: 2024-03-24 20:00:00
+tags: ["短篇", "程式", "入門"]
+description: PostgreSQL 提供了不需要實體 Table 的[諮詢鎖](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)功能，我們可以自行根據需求定義鎖的用處，並且會自動在 Session / Transaction 結束時自動釋放鎖。
+authors: ivan
+slug: 2024/03/24/pg-advisory-lock
+---
+
+PostgreSQL 提供了不需要實體 Table 的[諮詢鎖](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)功能，我們可以自行根據需求定義鎖的用處，並且會自動在 Session 或 Transaction 結束時自動釋放鎖。
+
+
+{/* truncate */}
+
+Session 1
+```sql
+SELECT pg_advisory_lock(100);
+--- 
+SELECT pg_advisory_unlock(100);
+```
+
+Session 2
+```sql
+SELECT pg_advisory_lock(100);
+--- 等候 Session 1 解鎖或結束
+```
+
+同一個 Session/Transaction 中，可以重複地呼叫 `pg_advisory_lock`，取得鎖之後只有相同 Sesstion/Transaction 能夠解鎖。
+完整的 Function 列表[請見此](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS-TABLE)。
+
+### 應用場景
+在 Micro Service 中，我們有時候需要 Worker 去「搶」工作，有搶到工作的才能繼續執行，來確保同一個 Task 只被執行一次。這時候 PG 的諮詢鎖就很好用：
+
+```ts
+function check(jobId) {
+  if(db.query(`SELECT pg_try_advisory_lock ($1)`, [jobId])) {
+    // Do the job
+  }
+}
+```
+如此一來一個 Task 只會有一個 Worker 成功鎖定成為 Master，並在 Session 結束後自動釋放。
+
+
+### 參考資料
+- [PostgreSQL 13.3.5. Advisory Locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
+- [PostgreSQL 9.27.10. Advisory Lock Functions](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS-TABLE)

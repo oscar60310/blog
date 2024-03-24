@@ -1,0 +1,43 @@
+---
+title: Advisory Locks of PostgreSQL
+date: 2024-03-24 20:00:00
+tags: ["Short Reads", "Programming", "Beginner"]
+description: PostgreSQL provides advisory locks, which do not require a physical table. We can define the purpose of the lock according to our applications, and it will automatically release the lock when the session or transaction ends.
+authors: ivan
+slug: 2024/03/24/pg-advisory-lock
+---
+
+PostgreSQL provides advisory locks, which do not require a physical table. We can define the purpose of the lock according to our applications, and it will automatically release the lock when the session or transaction ends.
+
+{/* truncate */}
+
+Session 1
+```sql
+SELECT pg_advisory_lock(100);
+--- 
+SELECT pg_advisory_unlock(100);
+```
+
+Session 2
+```sql
+SELECT pg_advisory_lock(100);
+--- Waits for Session 1 to release or end
+```
+
+Within the same session/transaction, `pg_advisory_lock` can be called repeatedly. Once the lock is acquired, only the same session/transaction can unlock it. For a complete list of functions, refer to [this link](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS-TABLE).
+
+### Use Cases
+In a Micro Service architecture, sometimes we need workers to "claim" work, and only those who claim it can proceed to execute, ensuring that the same task is executed only once. This is where PostgreSQL's advisory locks come in handy:
+
+```typescript
+function check(jobId) {
+  if(db.query(`SELECT pg_try_advisory_lock ($1)`, [jobId])) {
+    // Do the job
+  }
+}
+```
+This way, only one worker will successfully lock and become the master for a task, and it will automatically release it after the session ends.
+
+### References
+- [PostgreSQL 13.3.5. Advisory Locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
+- [PostgreSQL 9.27.10. Advisory Lock Functions](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS-TABLE)
