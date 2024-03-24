@@ -12,7 +12,8 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "update-index": "gis blog.cptsai.com"
   },
   "dependencies": {
     "@docusaurus/core": "^3.1.1",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.1.1",
     "@docusaurus/tsconfig": "^3.1.1",
+    "google-indexing-script": "^0.0.5",
     "typescript": "^5.3.3"
   },
   "browserslist": {
