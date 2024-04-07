@@ -1,0 +1,120 @@
+---
+title: 建立自己的 Tile Server
+date: 2024-04-07 22:00:00
+tags: ["短篇", "程式", "進階", "GIS"]
+description: 上一篇文章中，我們了解了 OSM 資料的內容，以及如何將他們導入到 PostGIS 資料庫中供我們使用。現在我們將利用這些資料建立我們的 Vector Tiles API server。
+authors: ivan
+slug: 2024/04/07/make-your-own-tile-servers
+image: ./gis_og.png
+---
+[上一篇文章](../load-osm-data-into-postgis/index.mdx)中，我們了解了 OSM 資料的內容，以及如何將他們導入到 PostGIS 資料庫中供我們使用。現在我們將利用這些資料建立我們的 Vector Tiles API server。
+
+
+{/* truncate */}
+
+## (選擇性)前置準備事項
+我們預計要製作包含行政區域邊界、海洋以及道路的地圖，在開始製作 Tile Server 之前，我們先確定這些資料都準備完成，我把準備資料的 Scripts 放在 Github 上，您可以跟隨我來準備相對應的資；不過，您也可以準備自己的資料，您可以瀏覽過開發流程後使用任何語言來開發。
+
+1. 安裝 [osm2pgsql](https://osm2pgsql.org/) 以及 [ogr2ogr](https://gdal.org/programs/ogr2ogr.html)，我們將用這兩個工具導入資料。
+2. 安裝 [Docker](https://www.docker.com/products/docker-desktop/)，我們將利用 Docker 快速啟動 PostGIS。
+3. 安裝 [NodeJS](https://nodejs.org/en)，範例程式將會使用 NodeJS 來開發。
+4. 下載範例專案。
+    ```bash
+    git clone git@github.com:oscar60310/tile-server-demo.git && cd ./tile-server-demo
+    ```
+5. 啟動 PostGIS 以及 [Maputnik](https://github.com/maplibre/maputnik)，我們下篇文章會使用 Maputnik 編輯樣式。
+    ```bash
+    docker compose up -d
+    ```
+6. 下載 OSM 資料，使用 OSM 資料須遵守其[規範](https://www.openstreetmap.org/copyright)。這個兩個 Scripts 會導入台灣地區的資料以及海洋的資料，並設定好 PostGIS。
+    ```bash
+    ./scripts/01_prepare_osm_data.sh
+    ./scripts/02_prepare_osm_water_data.sh
+    ```
+7. 初始化專案。
+    ```bash
+    npm i
+    ```
+
+## 輔助 Function - 座標轉換
+我們在第一篇文章中[提到](../how-web-maps-work/index.mdx#%E5%9C%96%E7%A3%9A%E7%B3%BB%E7%B5%B1)，圖磚系統包含了三個參數：Z(Zoom) / X / Y，我們將要在資料庫中時常搜尋某個圖磚所包含的內容，這時候我們可以在資料庫中建立 Function 來幫助我們：
+:::info
+這個 Helper Function 來自 [Mapbox](https://github.com/mapbox/postgis-vt-util/blob/master/src/TileBBox.sql) 專案。
+:::
+:::info
+這個 Helper Function 已經在 01_prepare_osm_data.sh 建立。
+:::
+
+```sql
+create or replace function TileBBox (z int, x int, y int, srid int = 3857)
+  returns geometry
+  language plpgsql immutable as
+$func$
+declare
+  max numeric := 20037508.34;
+  res numeric := (max*2)/(2^z);
+  bbox geometry;
+begin
+  bbox := ST_MakeEnvelope(
+      -max + (x * res),
+      max - (y * res),
+      -max + (x * res) + res,
+      max - (y * res) - res,
+      3857
+  );
+  if srid = 3857 then
+      return bbox;
+  else
+      return ST_Transform(bbox, srid);
+  end if;
+end;
+$func$;
+```
+我們使用 `ST_MakeEnvelope` 來建立一個矩形，利用輸入的 Z/X/Y 座標來算出矩形的位置。比如說這個是 `SELECT TileBBox(16, 54895, 28069)` 的結果：
+![](bbox.png)
+
+有個這個矩形，我們就可以取出相對應的結果了！
+
+## 取出道路資料
+我們先從道路資料開始，道路的資料儲存在 `planet_osm_line` 表中，我們可以使用 `ST_Intersects` Function 來找出和目標圖磚矩形有交會的項目：
+
+```sql
+SELECT
+  name,
+  highway,
+  way
+FROM
+  planet_osm_line
+WHERE
+  ST_Intersects (TileBBox (16, 54895, 28069), way)
+	AND highway IS NOT NULL --- OSM 資料中包含其他線路資料像是公車路網等等，我們暫時不需要他們。
+  AND name IS NOT NULL
+```
+結果如圖：
+![](./road-1.png)
+
+## 裁切並編碼資料
+上一個步驟已經拿到所有和圖磚有交會，也就是需要顯示在圖磚內的道路，但從結果來看可以發現，這些道路很常是超出圖磚的（畢竟興建道路可不是在圖磚上蓋的😂)，我們需要把他們才切成符合圖磚的大小。另一方面，我們將會透過網路傳輸圖磚資料，這時候需要一個有效率的編碼，圖磚的編碼標準已經由 Mapbox [定義](https://github.com/mapbox/vector-tile-spec)，目前大部分的客戶端(負責按照圖磚資料繪製地圖的軟體)都支援這個格式，也就是 Mapbox Vector Tile (MVT)，我們將在 PostGIS 中直接把結果轉為 MVT。
+[ST_AsMVTGeom](https://postgis.net/docs/ST_AsMVTGeom.html) Function 可以讓我們輕易地做到這件事情，只需要把結果和圖磚邊界傳給它就好：
+
+```sql
+SELECT
+  name,
+  highway,
+  ST_AsMVTGeom (way, TileBBox (16, 54895, 28069)) way
+FROM
+  planet_osm_line
+WHERE
+  ST_Intersects (TileBBox (16, 54895, 28069), way)
+  AND highway IS NOT NULL --- OSM 資料中包含其他線路資料像是公車路網等等，我們暫時不需要他們。
+  AND name IS NOT NULL
+```
+
+現在的結果就會是裁切完成的了：
+![](./road-2.png)
+
+import GisSeries from "../_gis-series.mdx";
+
+<GisSeries />
+
+## 參考資料
