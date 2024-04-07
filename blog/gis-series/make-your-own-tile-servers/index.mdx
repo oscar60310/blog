@@ -87,7 +87,7 @@ FROM
   planet_osm_line
 WHERE
   ST_Intersects (TileBBox (16, 54895, 28069), way)
-	AND highway IS NOT NULL --- OSM 資料中包含其他線路資料像是公車路網等等，我們暫時不需要他們。
+  AND highway IS NOT NULL --- OSM 資料中包含其他線路資料像是公車路網等等，我們暫時不需要他們。
   AND name IS NOT NULL
 ```
 結果如圖：
