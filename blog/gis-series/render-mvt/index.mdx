@@ -1,0 +1,36 @@
+---
+title: 編寫地圖樣式定義及使用 MapLibre GL JS 渲染地圖
+date: 2024-04-08 23:00:00
+tags: ["短篇", "程式", "進階", "GIS"]
+description: 上一篇文章中，我們建立了 Tiles Server，這篇文章是本系列的最後一篇，會把 MVT 的結果在網頁上繪製成地圖。
+authors: ivan
+slug: 2024/04/08/render-mvt
+image: ./gis_og.png
+---
+[上一篇文章](../make-your-own-tile-servers/index.mdx)中，我們建立了 Tiles Server，這篇文章是本系列的最後一篇，會把 MVT 的結果在網頁上繪製成地圖。
+
+{/* truncate */}
+
+## 前置準備事項
+1. 我們需要能提供 MVT 的 API Server，您可以自行建立，或是按照[上一篇文章](../make-your-own-tile-servers/index.mdx)的指示來下載並部屬範例專案。
+2. [Maputnik](https://github.com/maplibre/maputnik)，我們要使用它來編輯樣式，您可以參考官網來安裝，若能已經部屬好範例專案，它已經包含在其中，您可以開啟[http://localhost:8888/](http://localhost:8888/)查看它。
+
+## 加入 Data Source
+有了地圖資料之後，我們需要來撰寫樣式，有點像是 CSS，來告訴客戶端該怎麼繪製這些資料。
+請開啟 Maputnik [http://localhost:8888/](http://localhost:8888/)，選擇 Open > Empty Style，我們從頭開始製作~
+![](./screen-1.png)
+接著，選則 Data Source，加入 Vector (XYZ URLs)，Tile URL 請輸入 `http://localhost:3000/api/tiles/{z}/{x}/{y}.mvt` (或是您自定義的 API Endpoint)。
+
+## 加入海洋圖層
+我們先來繪製海洋，按下 Add Layer，ID = sea，Type = Fill，Source = 剛剛建立的 Source，Source Layer = Water。
+![](./screen-2.png)
+您可以改變 Paint properties 中的 Color 來讓海洋填充不同顏色，繪製好海洋後，您應該就可以看到陸地的輪廓了(也就是沒有被上色的那些區域)。
+![](./screen-3.png)
+
+## 加入行政區域與道路
+按照相同方式，您可以加入行政區域 (Layer = boundary, Type = Line) 和道路 (Layer = road, Type = Line)。
+
+import GisSeries from "../_gis-series.mdx";
+
+<GisSeries />
+
