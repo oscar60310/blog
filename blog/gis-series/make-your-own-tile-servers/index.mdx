@@ -1,10 +1,10 @@
 ---
 title: 建立自己的 Tile Server
-date: 2024-04-07 22:00:00
+date: 2024-04-08 22:00:00
 tags: ["短篇", "程式", "進階", "GIS"]
 description: 上一篇文章中，我們了解了 OSM 資料的內容，以及如何將他們導入到 PostGIS 資料庫中供我們使用。現在我們將利用這些資料建立我們的 Vector Tiles API server。
 authors: ivan
-slug: 2024/04/07/make-your-own-tile-servers
+slug: 2024/04/08/make-your-own-tile-servers
 image: ./gis_og.png
 ---
 [上一篇文章](../load-osm-data-into-postgis/index.mdx)中，我們了解了 OSM 資料的內容，以及如何將他們導入到 PostGIS 資料庫中供我們使用。現在我們將利用這些資料建立我們的 Vector Tiles API server。
@@ -113,8 +113,100 @@ WHERE
 現在的結果就會是裁切完成的了：
 ![](./road-2.png)
 
+## 取出海洋和行政區邊界的資料
+首先，我們可以使用 [ST_AsMVT](https://postgis.net/docs/ST_AsMVT.html) 把多個 MVT 整合在一起，並幫每個 MVT 命名，之後繪圖時我們可以針對不同的 MVT 繪製。接著我們把 API Server 接收到的參數帶進我們的 SQL 查詢中：
+:::info
+`{{ context.params.x }}` 是 [VulcanSQL](https://vulcansql.com/) 帶入參數的語法，您應該要使用相對應的語法來帶入參數。
+這個 SQL 檔案位於專案的 [./sqls/tiles.sql](https://github.com/oscar60310/tile-server-demo/blob/main/sqls/tiles.sql)。
+:::
+
+```sql
+SELECT
+  ST_AsMVT (data.*, 'road') mvt
+FROM
+  (
+    SELECT
+      name,
+      highway,
+      ST_AsMVTGeom (way, TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }}), 4096, 256, true) way
+    FROM
+      planet_osm_line
+    WHERE
+      ST_Intersects (TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }}), way)
+      AND highway IS NOT NULL
+      AND name IS NOT NULL
+  ) AS data
+```
+接下來我們可以按照一樣的方式取得海洋(位於 `water` 表中)和行政區域(位於 `planet_osm_polygon` 標中)，我們加入 CTE 來讓 SQL 好讀一些：
+```sql
+WITH all_data AS (
+  SELECT
+      'road' AS feature,
+      name,
+      highway AS category,
+      way
+    FROM
+      planet_osm_line
+    WHERE
+      highway IS NOT NULL
+      AND name IS NOT NULL
+    
+    UNION
+    
+    SELECT
+      'boundary' AS feature,
+      name,
+      NULL AS category,
+      way
+    FROM
+      planet_osm_polygon
+    WHERE
+      admin_level = '4' --- 只取 admin level = 4 的資料
+    
+    UNION
+    
+    SELECT
+      'water' AS feature,
+      NULL AS name,
+      NULL AS category,
+      way
+    FROM
+      water
+),
+tile_data AS (
+  SELECT 
+    all_data.feature,
+    all_data.name,
+    all_data.category,
+  	ST_AsMVTGeom (all_data.way, TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }})) way
+  FROM
+    all_data
+  WHERE
+    ST_Intersects (TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }}), all_data.way)
+)
+SELECT
+  ST_AsMVT (tile_data.*, tile_data.feature) mvt
+FROM tile_data
+GROUP BY tile_data.feature
+```
+:::warning
+我們並沒有很好的處理 Z 很小的時候查詢大量資料的問題，您可以自行決定要如何應對，比如說 Z > 10 才查詢道路等等。
+:::
+
+## 啟動 Tile Server
+現在，我們已經建立好 API Server 來查詢資料和編碼了，您可以到 [./sqls/tiles.sql](https://github.com/oscar60310/tile-server-demo/blob/main/sqls/tiles.sql) 查看最終結果。
+
+啟動 Tile server：
+```bash
+npm start
+```
+
+測試 Tile server
+前往 [http://localhost:3000/api/tiles/16/54895/28069.mvt](http://localhost:3000/api/tiles/16/54895/28069.mvt)，應該要能成功下載檔案。
+
+接下來，我們可以準備繪製地圖了！請參考下篇文章來實作。 
+
 import GisSeries from "../_gis-series.mdx";
 
 <GisSeries />
 
-## 參考資料
