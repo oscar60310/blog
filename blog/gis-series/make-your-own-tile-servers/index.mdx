@@ -13,7 +13,7 @@ image: ./gis_og.png
 {/* truncate */}
 
 ## (選擇性)前置準備事項
-我們預計要製作包含行政區域邊界、海洋以及道路的地圖，在開始製作 Tile Server 之前，我們先確定這些資料都準備完成，我把準備資料的 Scripts 放在 Github 上，您可以跟隨我來準備相對應的資；不過，您也可以準備自己的資料，您可以瀏覽過開發流程後使用任何語言來開發。
+我們預計要製作包含行政區域邊界、海洋以及道路的地圖，在開始製作 Tile Server 之前，我們先確定這些資料都準備完成，我把準備資料的 Scripts 放在 Github 上，您可以跟隨我來準備相對應的資料；不過，您也可以準備自己的資料，您可以瀏覽過開發流程後使用任何語言來開發。
 
 1. 安裝 [osm2pgsql](https://osm2pgsql.org/) 以及 [ogr2ogr](https://gdal.org/programs/ogr2ogr.html)，我們將用這兩個工具導入資料。
 2. 安裝 [Docker](https://www.docker.com/products/docker-desktop/)，我們將利用 Docker 快速啟動 PostGIS。
@@ -94,7 +94,7 @@ WHERE
 ![](./road-1.png)
 
 ## 裁切並編碼資料
-上一個步驟已經拿到所有和圖磚有交會，也就是需要顯示在圖磚內的道路，但從結果來看可以發現，這些道路很常是超出圖磚的（畢竟興建道路可不是在圖磚上蓋的😂)，我們需要把他們才切成符合圖磚的大小。另一方面，我們將會透過網路傳輸圖磚資料，這時候需要一個有效率的編碼，圖磚的編碼標準已經由 Mapbox [定義](https://github.com/mapbox/vector-tile-spec)，目前大部分的客戶端(負責按照圖磚資料繪製地圖的軟體)都支援這個格式，也就是 Mapbox Vector Tile (MVT)，我們將在 PostGIS 中直接把結果轉為 MVT。
+上一個步驟已經拿到所有和圖磚有交會，也就是需要顯示在圖磚內的道路，但從結果來看可以發現，這些道路很常是超出圖磚的（畢竟興建道路可不是在圖磚上蓋的😂)，我們需要把他們裁切成符合圖磚的大小。另一方面，我們將會透過網路傳輸圖磚資料，這時候需要一個有效率的編碼，圖磚的編碼標準已經由 Mapbox [定義](https://github.com/mapbox/vector-tile-spec)，目前大部分的客戶端(負責按照圖磚資料繪製地圖的軟體)都支援這個格式，也就是 Mapbox Vector Tile (MVT)，我們將在 PostGIS 中直接把結果轉為 MVT。
 [ST_AsMVTGeom](https://postgis.net/docs/ST_AsMVTGeom.html) Function 可以讓我們輕易地做到這件事情，只需要把結果和圖磚邊界傳給它就好：
 
 ```sql
@@ -178,7 +178,7 @@ tile_data AS (
     all_data.feature,
     all_data.name,
     all_data.category,
-  	ST_AsMVTGeom (all_data.way, TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }})) way
+    ST_AsMVTGeom (all_data.way, TileBBox ({{ context.params.z }}, {{ context.params.x }}, {{ context.params.y }})) way
   FROM
     all_data
   WHERE
@@ -204,7 +204,8 @@ npm start
 測試 Tile server
 前往 [http://localhost:3000/api/tiles/16/54895/28069.mvt](http://localhost:3000/api/tiles/16/54895/28069.mvt)，應該要能成功下載檔案。
 
-接下來，我們可以準備繪製地圖了！請參考下篇文章來實作。 
+------
+接下來，我們可以準備繪製地圖了！請參考[下篇文章](../render-mvt/index.mdx)來實作。 
 
 import GisSeries from "../_gis-series.mdx";
 

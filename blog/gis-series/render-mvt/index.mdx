@@ -13,7 +13,7 @@ image: ./gis_og.png
 
 ## 前置準備事項
 1. 我們需要能提供 MVT 的 API Server，您可以自行建立，或是按照[上一篇文章](../make-your-own-tile-servers/index.mdx)的指示來下載並部屬範例專案。
-2. [Maputnik](https://github.com/maplibre/maputnik)，我們要使用它來編輯樣式，您可以參考官網來安裝，若能已經部屬好範例專案，它已經包含在其中，您可以開啟[http://localhost:8888/](http://localhost:8888/)查看它。
+2. [Maputnik](https://github.com/maplibre/maputnik)，我們要使用它來編輯樣式，您可以參考官網來安裝，若您部屬好範例專案，它已經包含在其中，您可以開啟[http://localhost:8888/](http://localhost:8888/)查看它。
 
 ## 加入 Data Source
 有了地圖資料之後，我們需要來撰寫樣式，有點像是 CSS，來告訴客戶端該怎麼繪製這些資料。
@@ -49,7 +49,7 @@ image: ./gis_og.png
 ## 利用 MapLibre GL JS 在網頁上繪製地圖
 [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js/)可以根據我們定義的 Style 來在網頁上繪製地圖，您也可以使用不同的 Renderer 在其他裝置像是 iOS, Android 等等繪製地圖，相同的 Style 定義可以用在所有地方。
 
-您可以直接打開範例專案中的 [demo.html](https://github.com/mapbox/postgis-vt-util/blob/master/demo.html) 來查看結果。
+您可以直接打開範例專案中的 [demo.html](https://github.com/oscar60310/tile-server-demo/blob/main/demo.html) 來查看結果。
 
 ## Mapbox vs MapLibre
 其實很多標準和工具程式原本都是由 [Mapbox](https://github.com/mapbox) 定義和提供的，但他們在幾年前決定[修改](https://github.com/mapbox/mapbox-gl-js/issues/10162)原本開源專案的授權條款，現在使用 Mapbox libraries 是需要 Token 的，社群於是 Fork 一個版本(還是開源的版本)出來，才形成現在的 [Maplibre](https://github.com/maplibre/maplibre-gl-js)。
