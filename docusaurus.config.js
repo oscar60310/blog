@@ -94,13 +94,6 @@ const config = {
         darkTheme: darkCodeTheme,
         additionalLanguages: ['bash', 'diff', 'json'],
       },
-      algolia: {
-        // The application ID provided by Algolia
-        appId: "C38MO0F41F",
-        // Public API key: it is safe to commit it
-        apiKey: "b9691868757887f71af2deb3aa42e255",
-        indexName: "content",
-      },
       metadata: [
         {
           name: "google-site-verification",
