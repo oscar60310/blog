@@ -1,11 +1,11 @@
 import React from "react";
 import clsx from "clsx";
-import { useBlogPost } from "@docusaurus/theme-common/internal";
 import EditThisPage from "@theme/EditThisPage";
 import TagsListInline from "@theme/TagsListInline";
 import ReadMoreLink from "@theme/BlogPostItem/Footer/ReadMoreLink";
 import styles from "./styles.module.css";
 import Feedback from "@site/src/components/Feedback";
+import { useBlogPost } from "@docusaurus/plugin-content-blog/client";
 
 export default function BlogPostItemFooter(): JSX.Element | null {
   const { metadata, isBlogPostPage } = useBlogPost();
