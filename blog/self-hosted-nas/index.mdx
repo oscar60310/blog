@@ -60,7 +60,7 @@ mdadm --create /dev/md0 \
   /dev/sda /dev/sdb
 ```
 之後 `cat /proc/mdstat` 看到 active 就可以了。
-現在開始我們對需要對 /dev/md0 操作，mdadm 會幫我們處理寫入 sda/adb 的操作。
+現在開始我們對需要對 /dev/md0 操作，mdadm 會幫我們處理寫入 sda/sdb 的操作。
 
 #### 加密
 接下來處理加密，這個步驟不一定需要，硬碟加密可以讓之後硬碟遺失或是要報廢的時候安全一點，沒有密碼很難解密內容。
@@ -76,7 +76,7 @@ cryptsetup open /dev/md0 nas-data
 ```
 
 會在 mapper 下建立 nas-data，目前的架構會像這樣：
-ada/adb → /dev/md0 (raid) → /dev/mapper/nas-data (luks)
+sda/sdb → /dev/md0 (raid) → /dev/mapper/nas-data (luks)
 
 #### 自動解密
 
@@ -101,7 +101,7 @@ update-initramfs -u
 我在 Debian 上設定 tpm2-device=auto 的時候遇到了點問題，後來換用 dracut 後才能更新 initramfs。
 
 #### 檔案系統
-我選用 Btrfs當作資料碟的檔案系統，也可以用 ext4，Btrfs 可以建立 snapshots ，很適合 NAS 使用：
+我選用 Btrfs 當作資料碟的檔案系統，也可以用 ext4，Btrfs 可以建立 snapshots ，很適合 NAS 使用：
 ```bash
 mkfs.btrfs /dev/mapper/nas-data # 建立檔案系統
 mount /dev/mapper/nas-data /mnt/nas-data # 掛載
@@ -117,7 +117,7 @@ btrfs subvolume create /mnt/nas-data/@data # 建立 sub volume，方便以後建
 wget -O - https://get.openmediavault.io | sh - 
 ```
 
-安裝好後進如 Web 介面，設定 File System (mount) 和 Shared Folders 就可以開始使用了！
+安裝好後進入 Web 介面，設定 File System (mount) 和 Shared Folders 就可以開始使用了！
 
 Docker 的部分比較麻煩一點，需要先安裝 [OMV Extra](https://wiki.omv-extras.org/doku.php?id=omv7:docker_in_omv)，然後再安裝 Docker Plugin，基本上跟 Docker Compose 一樣，提供介面讓我們好操作。作者的 Docker 文件寫的超長，跟技術部落格一樣，值得一看！
 ### 耗電

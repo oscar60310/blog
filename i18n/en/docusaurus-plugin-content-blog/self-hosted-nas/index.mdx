@@ -1,0 +1,131 @@
+---
+title: "My Self-Hosted NAS Build Experience"
+date: 2026-07-29 17:35:00
+tags: ["Medium Reads", "DIY", "NAS"]
+description: ""
+authors: ivan
+slug: 2026/07/29/self-hosted-nas-en
+---
+
+### Introduction
+My Synology DS218+ had been repeatedly showing disk power-off errors. I suspected the SATA backplane, and that became a good excuse to retire my 8-year-old NAS and build a small server to use as both a NAS and a homelab machine. In this post, I share my self-built NAS journey, including hardware choices and software setup.
+
+<!-- truncate -->
+
+### Hardware Selection
+NAS hardware is pretty similar to a regular PC: motherboard, CPU, SSD, RAM, and so on.
+
+For CPU, if the goal is mostly file storage, I originally considered the Intel N100. Its minimum power usage is only 6W, and ASRock's [N100DC-ITX](https://www.asrock.com/mb/Intel/N100DC-ITX/) looked like a solid option. It uses DC input (so no standard PSU required) and has fanless cooling, which makes it quieter. But this board was out of stock in Taiwan, and buying from Amazon was not very cost-effective (5000+ NTD).
+Thanks to the AI boom, as of mid-2026, RAM prices are around 3x what they used to be. Motherboards, CPUs, and SSDs have also gone up a lot, so this is honestly not a great time to build a PC or NAS.
+
+After considering cost, I decided to build mostly with used parts. Even though new hardware prices are painful, there are still reasonably priced second-hand components. [Wolfgang's video](https://www.youtube.com/watch?v=UtMGnpdqBKw) explains how to pick hardware in this rough market. Here is what I ended up with:
+- Motherboard: [A520M-ITX/ac](https://asrock.com/MB/AMD/A520M-ITXac/index.tw.asp)
+- CPU: AMD Ryzen 3 PRO 4350G (used)
+- PSU: FSP SFX 650W
+- SSD: Samsung 128G (used)
+- RAM: Micron DDR4 8G (used)
+- Case: Linglong Chu
+
+For the motherboard, any AMD AM4 board is fine. I chose an ITX case to keep the NAS compact, so I had to use a mini-ITX (17 x 17 cm) board and an SFX PSU. That increased cost quite a bit. If budget matters more, a regular ATX setup is better, and you can even repurpose a retired office desktop.
+
+For CPU, choosing one with integrated graphics (AMD models ending in G) means you do not need a discrete GPU, and services like Immich can use hardware decoding. Also, unlike a typical PC build, power efficiency matters more than peak performance for me. I want the CPU to enter C-States during idle time (which is most of the day). Some AMD CPUs seem to have C-State-related quirks, so it is worth researching before buying.
+
+For a 2-bay NAS, 100W is generally more than enough. I just could not find a small low-wattage SFX PSU in Taiwan, so I ended up with a larger one.
+
+Used SSDs and RAM can often be found for just a few hundred NTD, but quality is luck-dependent. Since I only use the SSD for system files, failure risk is acceptable for me. If you plan to store important data there, be much more careful.
+
+### RAID, Encryption, and File System
+With hardware done, let's move to software. I still wanted a 2-bay layout because HDD prices are high, so I reused the two drives from my old Synology.
+
+#### RAID
+A RAID 1 setup with two drives is a good option. RAID (redundant array of independent disks) Level 1 writes data to both disks at the same time. That means usable capacity is cut in half, but if one drive fails, your data is still available.
+
+List your disks first:
+```bash
+lsblk -o NAME,SIZE,MODEL,SERIAL
+```
+
+Recreate partitions (be absolutely sure you select the correct disk):
+```bash
+wipefs -a /dev/sdX 
+fdisk /dev/sdX
+```
+
+Create the array:
+```bash
+mdadm --create /dev/md0 \
+  --level=1 \
+  --raid-devices=2 \
+  --name=nas-raid1 \
+  /dev/sda /dev/sdb
+```
+After that, if `cat /proc/mdstat` shows `active`, you are good.
+From this point, operate on `/dev/md0`; `mdadm` handles mirroring writes to `sda/sdb`.
+
+#### Encryption
+Next is encryption. This step is optional, but disk encryption helps protect data if a drive is lost or disposed of. Without the passphrase, decrypting the data is very difficult.
+
+Set a passphrase:
+```bash
+cryptsetup luksFormat /dev/md0
+```
+
+Open the encrypted volume:
+```bash
+cryptsetup open /dev/md0 nas-data
+```
+
+This creates `nas-data` under `mapper`. The stack now looks like this:
+`sda/sdb -> /dev/md0 (raid) -> /dev/mapper/nas-data (luks)`
+
+#### Automatic Unlock
+After enabling encryption, you need to enter a passphrase on every reboot, which is inconvenient for a NAS. If your hardware supports it, TPM unlock can help, with the passphrase kept as a backup method.
+
+Enroll TPM:
+```bash
+systemd-cryptenroll \
+  --tpm2-device=auto \
+  /dev/md0
+```
+
+Enable auto-unlock at boot:
+```bash
+# Edit crypttab
+nano /etc/crypttab
+nas-data UUID=xxxx none tpm2-device=auto
+# Update initramfs
+update-initramfs -u
+```
+
+On Debian, I ran into issues with `tpm2-device=auto`. I could only update initramfs successfully after switching to dracut.
+
+#### File System
+I chose Btrfs for the data volume. You can also use ext4. Btrfs supports snapshots, which is great for NAS usage:
+```bash
+mkfs.btrfs /dev/mapper/nas-data # create filesystem
+mount /dev/mapper/nas-data /mnt/nas-data # mount
+
+btrfs subvolume create /mnt/nas-data/@data # create subvolume for future snapshots
+```
+
+That is it. You can mount the `@data` subvolume from `/dev/mapper/nas-data` directly, or let your NAS OS handle it.
+
+### OpenMediaVault
+Managing a NAS with plain Linux is possible, but having a web UI is nice. [OpenMediaVault](https://www.openmediavault.org/) (OMV) is a lightweight NAS OS. It includes common NAS features such as SMB, SSH, and Docker.
+```bash
+wget -O - https://get.openmediavault.io | sh - 
+```
+
+After installation, open the web UI, configure File System (mount) and Shared Folders, and you can start using it.
+
+Docker setup is a bit more involved. You need to install [OMV Extra](https://wiki.omv-extras.org/doku.php?id=omv7:docker_in_omv) first, then install the Docker plugin. It is conceptually similar to Docker Compose, but with a UI to make operations easier. The author's Docker documentation is very long, almost like a technical blog by itself, and worth reading.
+
+### Power Consumption
+To save power, disable unnecessary components like Wi-Fi and Bluetooth in BIOS, enable C-States, configure HDD standby (OMV supports this), and use SSD for non-NAS storage workloads such as databases.
+
+My current power usage:
+- CPU + motherboard (no HDDs): 15W
+- CPU + two HDDs active: 21-25W
+- CPU under full load (for example, Immich machine learning): 65W
+
+For a NAS, this power profile is quite satisfying. I will keep observing and see what can be improved over time.
