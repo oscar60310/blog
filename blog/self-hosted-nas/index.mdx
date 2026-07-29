@@ -1,0 +1,131 @@
+---
+title: "自架 NAS 經驗分享"
+date: 2026-07-29 17:35:00
+tags: ["中篇", "DIY", "NAS"]
+description: ""
+authors: ivan
+slug: 2026/07/29/self-hosted-nas
+---
+
+### 前言
+最近我的群暉 NAS DS218+ 一直出現硬碟斷電的錯誤，我猜可能是 SATA 背板的問題，剛好找到藉口把用了 8 年的 NAS 換掉，組一台小型伺服器當作 NAS 兼 Homelab，這篇文章來分享我自組 NAS 的過程，包括硬體選擇和軟體的部署。
+
+<!-- truncate -->
+
+### 硬體選擇
+NAS 的硬體和一台 PC 差不多，需要主機板、CPU、SSD、記憶體等元件。
+
+CPU 的部分，如果只有資料儲存需求的話，我本來考慮的是 Intel N100，他的最低功耗只有 6 瓦，華擎的 [N100DC-ITX](https://www.asrock.com/mb/Intel/N100DC-ITX/) 是個不錯的選擇，DC 供電不需要電源供應器，無風扇散熱更安靜。但這個板子台灣沒有貨，Amazon 買的話價格不是很划算（5000+ NTD）。
+拜 AI 發展所賜，目前 （2026年中）記憶體價格大概是以往的三倍，主機板、CPU、SSD 也漲得不成人樣，在這個時間點要組一台電腦或是 NAS 其實不是個好選擇。
+
+在考量成本後，我決定以二手元件為主來組這台機器，縱使最新的產品價格讓人買不下去，我們依然可以找到價格合理的二手元件，[Wolfgang 的影片](https://www.youtube.com/watch?v=UtMGnpdqBKw)說明了在這個艱困的時代如何挑選硬體，這是我最後選擇的項目：
+- 主機板：[A520M-ITX/ac](https://asrock.com/MB/AMD/A520M-ITXac/index.tw.asp)
+- CPU：AMD Ryzen 3 PRO 4350G (二手)
+- 電源：全漢 SFX 650W
+- SSD: 三星 128G (二手)
+- 記憶體：美光 DDR4 8G (二手)
+- 機殼：玲瓏儲
+
+主機板挑選 AMD AM4 就可以了，我為了讓 NAS 體積小一點，選擇了 ITX 機櫃，只支援 mini-ITX (17 x 17cm) 的主機板和 SFX 規格的電源，多花了不少錢，要以價格優先的話找一般 ATX 規格的就好，甚至可以找淘汰的二手文書機整個拿來用。
+
+CPU 可以選擇內建顯示晶片，後面有帶 G 的，這樣就不用另外插顯卡，可以拿來給 Immich 等服務做硬體解碼。另外，和 PC 不同的是，比起效能，功耗對我來說更重要，我希望 CPU 能夠在沒事的時候（大部分個時間）進入 C-State，AMD 某些 CPU 似乎有 C-State 相關的 Bug，挑選之前需要先調查。
+
+電源的部分如果要組 2 Bay 的 NAS，100 瓦的功率應該就綽綽有餘，我只是找不到台灣小功率 SFX 的電源，所以找了個大塊頭來用。
+
+SSD、記憶體在二手市場應該可以用幾百塊的價格找到，品質得碰碰運氣，因為 SSD 我只用來放系統，所以就算壞了也沒差，要放重要資料的話得慎重考慮。
+
+### RAID、加密與檔案系統
+硬體好了之後我們來處理軟體，首先，我依然想維持 2 Bay 的硬碟櫃，因為硬碟超貴！只能把原本放在群暉上的兩個硬碟拿來用。
+
+#### RAID
+兩個硬碟組 RAID 1 是個不錯的選擇，RAID (redundant array of independent disks) Level 1 會同時寫入兩個磁碟，意思是實際能用的空間會只有一半，但其中一個硬碟壞掉時資料不會遺失。
+
+先列出硬碟
+```bash
+lsblk -o NAME,SIZE,MODEL,SERIAL
+```
+
+重新建立 Partition (千萬要選對硬碟)
+```bash
+wipefs -a /dev/sdX 
+fdisk /dev/sdX
+```
+
+建立 Array
+```bash
+mdadm --create /dev/md0 \
+  --level=1 \
+  --raid-devices=2 \
+  --name=nas-raid1 \
+  /dev/sda /dev/sdb
+```
+之後 `cat /proc/mdstat` 看到 active 就可以了。
+現在開始我們對需要對 /dev/md0 操作，mdadm 會幫我們處理寫入 sda/adb 的操作。
+
+#### 加密
+接下來處理加密，這個步驟不一定需要，硬碟加密可以讓之後硬碟遺失或是要報廢的時候安全一點，沒有密碼很難解密內容。
+
+設定密碼：
+```bash
+cryptsetup luksFormat /dev/md0
+```
+
+解密：
+```bash
+cryptsetup open /dev/md0 nas-data
+```
+
+會在 mapper 下建立 nas-data，目前的架構會像這樣：
+ada/adb → /dev/md0 (raid) → /dev/mapper/nas-data (luks)
+
+#### 自動解密
+
+加密後每次重開機都需要輸入密碼，這對 NAS 來說有點不方便，如果硬體支援的話我們可以使用 TPM 解密，密碼當作備援。
+
+註冊 TPM:
+```bash
+systemd-cryptenroll \
+  --tpm2-device=auto \
+  /dev/md0
+```
+
+開機自動執行
+```bash
+# 修改 crypttab
+nano /etc/crypttab
+nas-data UUID=xxxx none tpm2-device=auto
+# 更新 initramfs
+update-initramfs -u
+```
+
+我在 Debian 上設定 tpm2-device=auto 的時候遇到了點問題，後來換用 dracut 後才能更新 initramfs。
+
+#### 檔案系統
+我選用 Btrfs當作資料碟的檔案系統，也可以用 ext4，Btrfs 可以建立 snapshots ，很適合 NAS 使用：
+```bash
+mkfs.btrfs /dev/mapper/nas-data # 建立檔案系統
+mount /dev/mapper/nas-data /mnt/nas-data # 掛載
+
+btrfs subvolume create /mnt/nas-data/@data # 建立 sub volume，方便以後建立 Snapshot
+```
+
+這樣就完成了！我們可以 mount /dev/mapper/nas-data 的 @data subvolume 來操作，也可以讓 NAS OS 來處理。
+
+### openmediavault 
+其實要純用 Linux 管理 NAS 也不是不行，但有個介面幫忙管理還是不錯的，[OpenMediaVault](https://www.openmediavault.org/) (OMV) 是個輕量的 NAS 系統，NAS 需要的功能，例如 SMB、SSH、Docker，他都包含在內。
+```bash
+wget -O - https://get.openmediavault.io | sh - 
+```
+
+安裝好後進如 Web 介面，設定 File System (mount) 和 Shared Folders 就可以開始使用了！
+
+Docker 的部分比較麻煩一點，需要先安裝 [OMV Extra](https://wiki.omv-extras.org/doku.php?id=omv7:docker_in_omv)，然後再安裝 Docker Plugin，基本上跟 Docker Compose 一樣，提供介面讓我們好操作。作者的 Docker 文件寫的超長，跟技術部落格一樣，值得一看！
+### 耗電
+要省電的話，我們可以把不必要的元件，像是 Wifi、藍牙等等從 BIOS 關掉，啟用 C-State，設定 HDD 休眠 (OMV可以設定)，非 NAS 資料的存儲，像是 Database 等使用 SDD。
+
+目前我的設備耗電量如下：
+- CPU + 主機板（沒有硬碟）- 15 W
+- CPU + 兩個 HDD 啟用 - 21 ~ 25 W
+- CPU 滿載（例如跑 Immich Machine Learning) -  65 W
+
+這樣的耗電作為一台 NAS 令人滿意，過陣子再來看看有沒有什麼需要改進的地方！
