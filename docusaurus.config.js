@@ -13,7 +13,6 @@ const config = {
   url: "https://blog.cptsai.com",
   baseUrl: "/",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
   favicon: "img/icon.svg",
 
   // Even if you don't use internalization, you can use this field to set useful
@@ -124,7 +123,13 @@ const config = {
       async: true,
       'data-website-id': "2d94bbab-d0e1-4d61-b278-ff9abc5ef3f1"
     }
-  ]
+  ],
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn"
+    }
+  }
 };
 
 module.exports = config;
