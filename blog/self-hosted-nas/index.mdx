@@ -57,7 +57,7 @@ mdadm --create /dev/md0 \
   --level=1 \
   --raid-devices=2 \
   --name=nas-raid1 \
-  /dev/sda /dev/sdb
+  /dev/sda1 /dev/sdb1
 ```
 之後 `cat /proc/mdstat` 看到 active 就可以了。
 現在開始我們對需要對 /dev/md0 操作，mdadm 會幫我們處理寫入 sda/sdb 的操作。
@@ -76,7 +76,7 @@ cryptsetup open /dev/md0 nas-data
 ```
 
 會在 mapper 下建立 nas-data，目前的架構會像這樣：
-sda/sdb → /dev/md0 (raid) → /dev/mapper/nas-data (luks)
+sda1/sdb1 → /dev/md0 (raid) → /dev/mapper/nas-data (luks)
 
 #### 自動解密
 
