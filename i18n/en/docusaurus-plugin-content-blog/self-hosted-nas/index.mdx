@@ -57,7 +57,7 @@ mdadm --create /dev/md0 \
   --level=1 \
   --raid-devices=2 \
   --name=nas-raid1 \
-  /dev/sda /dev/sdb
+  /dev/sda1 /dev/sdb1
 ```
 After that, if `cat /proc/mdstat` shows `active`, you are good.
 From this point, operate on `/dev/md0`; `mdadm` handles mirroring writes to `sda/sdb`.
@@ -76,7 +76,7 @@ cryptsetup open /dev/md0 nas-data
 ```
 
 This creates `nas-data` under `mapper`. The stack now looks like this:
-`sda/sdb -> /dev/md0 (raid) -> /dev/mapper/nas-data (luks)`
+`sda1/sdb1 -> /dev/md0 (raid) -> /dev/mapper/nas-data (luks)`
 
 #### Automatic Unlock
 After enabling encryption, you need to enter a passphrase on every reboot, which is inconvenient for a NAS. If your hardware supports it, TPM unlock can help, with the passphrase kept as a backup method.
